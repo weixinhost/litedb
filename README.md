@@ -8,7 +8,7 @@
     LiteDB 不提供任何形式的SQLBuilder
     LiteDB 进行延迟连接
 
-#### Connect
+#### Init
 
 ```golang
 
@@ -20,6 +20,14 @@
 
    client := litedb.NewTcpClient(host,port,user,password,database)
 
+```
+
+#### Configure
+
+```golang
+
+    client.Config.Set("timeout","5")
+    client.Config.Set("charset","utf8")
 ```
 
 #### Query
