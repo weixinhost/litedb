@@ -6,28 +6,25 @@ import (
 	"reflect"
 )
 
-type ClientResult struct {
 
-}
 
+// Exec 的结果
 type ClientExecResult struct {
 
 	Result sql.Result
 	Err 	error
 }
 
+// Query 的结果
 type ClientQueryResult struct {
-
 	Rows *sql.Rows
 	Err error
-
 }
 
 //ToMap 将结果集转换为Map类型
 //这个操作不进行任何类型转换
 //因为这里的类型转换需要一次SQL去反射字段类型
 //更多的时候会得不偿失
-
 func (this *ClientQueryResult)ToMap() ([]map[string]string,error)  {
 
 	if this.Err != nil {
@@ -71,6 +68,7 @@ func (this *ClientQueryResult)ToMap() ([]map[string]string,error)  {
 	return parsed,nil
 }
 
+// 将Rows中的首行解析成一个map[string]string
 func (this *ClientQueryResult)FirstToMap() (map[string]string,error) {
 
 	maps,err := this.ToMap()
@@ -86,6 +84,12 @@ func (this *ClientQueryResult)FirstToMap() (map[string]string,error) {
 	return nil,errors.New("[LiteDB FirstMap] RowNotFound")
 }
 
+// 将首行解析成一个Struct ,需要传递一个 struct的指针.
+// struct 定义中使用标签 tag 来进行数据库字段映射,比如
+// struct {
+// 	 Id int `db:"id"`
+//   Name string `db:"name"`
+//}
 func (this *ClientQueryResult)FirstToStruct(v interface{}) error {
 
 	first,err := this.FirstToMap()
@@ -98,6 +102,9 @@ func (this *ClientQueryResult)FirstToStruct(v interface{}) error {
 
 }
 
+//将结果集转换成一个struct 数组
+// var containers []Person
+// ToStruct(&containers)
 func (this *ClientQueryResult)ToStruct(containers interface{}) error {
 
 	maps,err := this.ToMap()
@@ -132,6 +139,7 @@ func (this *ClientQueryResult)ToStruct(containers interface{}) error {
 
 	return nil
 }
+
 
 func mapToStruct(mapV map[string]string,structV interface{}) error {
 
@@ -286,16 +294,10 @@ func StructToMap(structV interface{}) (map[string]string,error){
 	if reflect.ValueOf(structV).IsNil() {
 		return nil,errors.New("[LiteDB structToMap] store struct is nil")
 	}
-	
-	if p.Kind() == reflect.Map {
-		return structV.(map[string]string),nil
-	}
 
 	if p.Kind() != reflect.Struct {
 		return nil,errors.New("[LiteDB structToMap] struct is non-struct.")
 	}
-
-
 
 	if  t.NumField() < 1{
 

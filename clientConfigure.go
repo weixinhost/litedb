@@ -5,6 +5,7 @@ import (
 	"fmt"
 )
 
+//客户端DNS配置
 type ClientDNSConfigure struct {
 	configure map[string]string
 }
@@ -17,6 +18,9 @@ func NewClientDnsConfigure() *ClientDNSConfigure{
 	return configure
 }
 
+// 设置一个客户端DNS设置.
+// Set("timeout","5")
+// 详细信息请参考golang mysql DNS语法
 func (this *ClientDNSConfigure)Set(k ,v string) bool {
 
 	this.configure[k] = v
@@ -31,6 +35,7 @@ func (this *ClientDNSConfigure)Remove(k string) bool {
 
 }
 
+// 将起解析成字符串
 func (this *ClientDNSConfigure)Parse() string {
 
 	buffer := bytes.NewBufferString("")
@@ -41,7 +46,6 @@ func (this *ClientDNSConfigure)Parse() string {
 
 	return string(buffer.Bytes()[0:buffer.Len() - 1])
 }
-
 
 func (this *ClientDNSConfigure)defaultConfigure(){
 
