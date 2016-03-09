@@ -10,7 +10,7 @@
 
 #### Init
 
-```golang
+```go
 
     host        := "127.0.0.1"
     port        := 3306
@@ -24,7 +24,7 @@
 
 #### Configure
 
-```golang
+```go
 
     client.Config.Set("timeout","5")
     client.Config.Set("charset","utf8")
@@ -32,7 +32,7 @@
 
 #### Query
 
-```golang
+```go
 
  fullSql := "SELECT * FROM `my_table` LIMIT 10"
 
@@ -73,7 +73,8 @@
 
 #### Insert
 
-```golang
+```go
+
  type Temp struct {
 
         Id      int `db:"id"`
@@ -96,7 +97,8 @@
 
 
 #### Update
-```golang
+```go
+
  type Temp struct {
 
         Id      int `db:"id"`
@@ -117,7 +119,7 @@
 ```
 
 #### Delete
-```golang
+```go
 
     ret := client.Delete("table","id=?",1)
 

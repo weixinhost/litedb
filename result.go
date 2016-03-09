@@ -286,6 +286,10 @@ func StructToMap(structV interface{}) (map[string]string,error){
 	if reflect.ValueOf(structV).IsNil() {
 		return nil,errors.New("[LiteDB structToMap] store struct is nil")
 	}
+	
+	if p.Kind() == reflect.Map {
+		return structV.(map[string]string),nil
+	}
 
 	if p.Kind() != reflect.Struct {
 		return nil,errors.New("[LiteDB structToMap] struct is non-struct.")

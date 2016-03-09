@@ -59,8 +59,6 @@ func (this *Client)Exec(sqlFmt string,sqlValue...interface{}) (*ClientExecResult
 		return result
 	}
 
-	fmt.Fprintf(os.Stderr,sqlFmt,sqlValue...)
-
 	var ret sql.Result
 	var err error
 	//如果在事务中
@@ -97,13 +95,19 @@ func (this *Client)Query(sqlFmt string,sqlValue...interface{}) (*ClientQueryResu
 func (this *Client)Insert(table string,v interface{})(*ClientExecResult) {
 
 	smap,err := StructToMap(v)
-
-	fmt.Fprintln(os.Stdout,smap)
+	r :=  new(ClientExecResult)
 
 	if err != nil {
-		r :=  new(ClientExecResult)
+
 		r.Err = errors.New("[LiteDB Insert] " + err.Error())
 		return r
+	}
+
+	if len(smap) < 1 {
+
+		r.Err = errors.New("[LiteDB Insert] Nothing Insert")
+		return r
+
 	}
 
 	keys := bytes.NewBufferString("")
@@ -126,8 +130,6 @@ func (this *Client)Update(table string,v interface{},whereFmt string,whereValue.
 
 	smap,err := StructToMap(v)
 
-	fmt.Fprintln(os.Stdout,smap)
-
 	if err != nil {
 		r :=  new(ClientExecResult)
 		r.Err = errors.New("[LiteDB Update] " + err.Error())
@@ -149,7 +151,44 @@ func (this *Client)Update(table string,v interface{},whereFmt string,whereValue.
 
 }
 
-func (this *Client)Delete(table string,whereFmt string,whereValue...interface{})(*ClientResult,error) {
+func (this *Client)UpdateFields(table string,v interface{},fields []string,whereFmt string,whereValue...interface{}) (*ClientExecResult) {
+
+	smap,err := StructToMap(v)
+
+	if err != nil {
+		r :=  new(ClientExecResult)
+		r.Err = errors.New("[LiteDB Update] " + err.Error())
+		return r
+	}
+
+	vmap := make(map[string]string,0)
+
+	for _,f := range fields {
+		v,ok := smap[f]
+		if ok == true {
+			vmap[f] = v
+		}
+	}
+
+	smap = vmap
+
+	set := bytes.NewBufferString("")
+	valList := make([]interface{},0)
+
+	for k,v := range smap {
+		set.WriteString(fmt.Sprintf("`%s`=?, ",k))
+		valList = append(valList,v)
+	}
+
+	setSplit := string(set.Bytes()[0:set.Len() - 1])
+
+	sql := fmt.Sprintf("UPDATE `%s` SET %s WHERE %s",table,setSplit,whereFmt)
+	return this.Exec(sql,append(valList,whereValue))
+
+
+}
+
+func (this *Client)Delete(table string,whereFmt string,whereValue...interface{})(*ClientExecResult) {
 	sql := fmt.Sprintf("DELETE FROM `%s` WHERE %s",table,whereFmt)
 	return this.Exec(sql,whereValue)
 }
