@@ -8,23 +8,23 @@ import (
 
 
 
-// Exec 的结果
+// Client.Exec 的结果
 type ClientExecResult struct {
 
 	Result sql.Result
 	Err 	error
 }
 
-// Query 的结果
+// Client.Query 的结果
 type ClientQueryResult struct {
 	Rows *sql.Rows
 	Err error
 }
 
-//ToMap 将结果集转换为Map类型
-//这个操作不进行任何类型转换
-//因为这里的类型转换需要一次SQL去反射字段类型
-//更多的时候会得不偿失
+//ToMap 将结果集转换为Map类型.
+//这个操作不进行任何类型转换.
+//因为这里的类型转换需要一次SQL去反射字段类型.
+//更多的时候会得不偿失.
 func (this *ClientQueryResult)ToMap() ([]map[string]string,error)  {
 
 	if this.Err != nil {
@@ -89,7 +89,7 @@ func (this *ClientQueryResult)FirstToMap() (map[string]string,error) {
 // struct {
 // 	 Id int `db:"id"`
 //   Name string `db:"name"`
-//}
+// }
 func (this *ClientQueryResult)FirstToStruct(v interface{}) error {
 
 	first,err := this.FirstToMap()
@@ -104,7 +104,36 @@ func (this *ClientQueryResult)FirstToStruct(v interface{}) error {
 
 //将结果集转换成一个struct 数组
 // var containers []Person
+//
 // ToStruct(&containers)
+// 对于struct类型,支持以下字段类型:
+// int8
+//
+// int16
+//
+// int32
+//
+// int64
+//
+// int
+//
+// uint8
+//
+// uint16
+//
+// uint32
+//
+// uint64
+//
+// uint
+//
+// float32
+//
+// float64
+//
+// string
+//
+// []byte
 func (this *ClientQueryResult)ToStruct(containers interface{}) error {
 
 	maps,err := this.ToMap()

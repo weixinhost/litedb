@@ -28,6 +28,8 @@ func (this *ClientDNSConfigure)Set(k ,v string) bool {
 
 }
 
+// 移除设置
+// Remove("timeout")
 func (this *ClientDNSConfigure)Remove(k string) bool {
 
 	delete(this.configure, k)
@@ -35,7 +37,7 @@ func (this *ClientDNSConfigure)Remove(k string) bool {
 
 }
 
-// 将起解析成字符串
+// 将起解析DNS格式的字符串
 func (this *ClientDNSConfigure)Parse() string {
 
 	buffer := bytes.NewBufferString("")

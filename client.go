@@ -223,6 +223,121 @@ func (this *Client)Delete(table string,whereFmt string,whereValue...interface{})
 }
 
 
+// 插入或更新行(当主键已存在的时候)
+// SQL语句为: INSERT INTO .... ON DUPLICATE KEY UPDATE ....
+// 全部字段更新
+func (this *Client)InsertOrUpdate(table string,v interface{}) (*ClientExecResult) {
+
+	smap,err := StructToMap(v)
+	r :=  new(ClientExecResult)
+
+	if err != nil {
+		r.Err = errors.New("[LiteDB InsertOrUpdate] " + err.Error())
+		return r
+	}
+
+	if len(smap) < 1 {
+		r.Err = errors.New("[LiteDB InsertOrUpdate] Nothing Insert")
+		return r
+
+	}
+
+	insertKeys := bytes.NewBufferString("")
+	insertVals := bytes.NewBufferString("")
+
+	set := bytes.NewBufferString("")
+
+	insertValList := make([]interface{},0)
+	updateValList := make([]interface{},0)
+
+	for k,v := range smap {
+		insertKeys.WriteString(fmt.Sprintf("`%s`,",k))
+		insertVals.WriteString("?,")
+
+		set.WriteString(fmt.Sprintf("`%s`=?,",k))
+		insertValList = append(insertValList,v)
+		updateValList = append(updateValList,v)
+	}
+
+	keysSplit := string(insertKeys.Bytes()[0:insertKeys.Len() - 1])
+	valsSplit := string(insertVals.Bytes()[0:insertVals.Len() -1])
+	setSplit  := string(set.Bytes()[0:set.Len() -1])
+
+	insertValList = append(insertValList,updateValList...)
+
+	sql := fmt.Sprintf("INSERT INTO `%s` (%s) VALUES (%s) ON DUPLICATE KEY UPDATE  %s",table,keysSplit,valsSplit,setSplit)
+
+	return this.Exec(sql,insertValList...)
+
+}
+
+// 插入或更新行(当主键已存在的时候)
+// SQL语句为: INSERT INTO .... ON DUPLICATE KEY UPDATE ....
+func (this *Client)InsertOrUpdateFields(table string,v interface{},updateFields...string)(*ClientExecResult){
+
+	smap,err := StructToMap(v)
+	r :=  new(ClientExecResult)
+
+	if err != nil {
+		r.Err = errors.New("[LiteDB InsertOrUpdateFields] " + err.Error())
+		return r
+	}
+
+	if len(smap) < 1 {
+		r.Err = errors.New("[LiteDB InsertOrUpdateFields] Nothing Insert")
+		return r
+	}
+
+	if len(updateFields) < 1 {
+		r.Err = errors.New("[LiteDB InsertOrUpdateFields] Nothing Update")
+		return r
+	}
+
+	updateMap := make(map[string]string,0)
+	for _,f := range updateFields {
+		if v,ok := smap[f];ok {
+			updateMap[f] = v
+		}
+	}
+
+	if len(updateMap) < 1 {
+		r.Err = errors.New("[LiteDB InsertOrUpdateFields] Nothing Update")
+		return r
+	}
+
+	insertKeys := bytes.NewBufferString("")
+	insertVals := bytes.NewBufferString("")
+
+	set := bytes.NewBufferString("")
+
+	insertValList := make([]interface{},0)
+	updateValList := make([]interface{},0)
+
+	for k,v := range smap {
+		insertKeys.WriteString(fmt.Sprintf("`%s`,",k))
+		insertVals.WriteString("?,")
+		insertValList = append(insertValList,v)
+
+	}
+
+	for k,v := range updateMap {
+		set.WriteString(fmt.Sprintf("`%s`=?,",k))
+		updateValList = append(updateValList,v)
+	}
+
+	keysSplit := string(insertKeys.Bytes()[0:insertKeys.Len() - 1])
+	valsSplit := string(insertVals.Bytes()[0:insertVals.Len() -1])
+	setSplit  := string(set.Bytes()[0:set.Len() -1])
+
+	insertValList = append(insertValList,updateValList...)
+
+	sql := fmt.Sprintf("INSERT INTO `%s` (%s) VALUES (%s) ON DUPLICATE KEY UPDATE  %s",table,keysSplit,valsSplit,setSplit)
+
+	return this.Exec(sql,insertValList...)
+
+
+}
+
 /*
 func (this *Client)Begin() error{
 	tx,err := this.db.Begin()
