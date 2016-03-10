@@ -19,8 +19,15 @@
     </section>
 
     <section class="main-content">
-      <h3>
-<a id="litedb" class="anchor" href="#litedb" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>LiteDB</h3>
+      <h1>
+<a id="litedb" class="anchor" href="#litedb" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>litedb</h1>
+
+<h2></h2>
+
+<pre><code>import "litedb"
+</code></pre>
+
+<p>一个轻便以及追求SQL性能的MYSQL客户端</p>
 
 <h4>
 <a id="intro" class="anchor" href="#intro" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Intro</h4>
@@ -29,17 +36,7 @@
 LiteDB 不会对设计范式与Mysql本身做更多的侵入
 LiteDB 提供基本的SQL CURD封装
 LiteDB 不提供任何形式的SQLBuilder
-LiteDB 进行延迟连接
-</code></pre>
-
-<h4>
-<a id="dev-plan" class="anchor" href="#dev-plan" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Dev Plan</h4>
-
-<pre><code>1. 首先完成基本API的定型
-2. 进行大规模测试
-3. 保证跨协程级别安全
-4. 保证连接池的可用性
-5. 事务的支持
+LiteDB 使用 `database/sql` 和 mysql驱动
 </code></pre>
 
 <h4>
@@ -159,15 +156,9 @@ LiteDB 进行延迟连接
 </pre></div>
 
 <h2>
-<a id="litedb-1" class="anchor" href="#litedb-1" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>litedb</h2>
+<a id="usage" class="anchor" href="#usage" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Usage</h2>
 
-<h2></h2>
-
-<pre><code>import "litedb"
-</code></pre>
-
-<h3>
-<a id="usage" class="anchor" href="#usage" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Usage</h3>
+<hr>
 
 <h4>
 <a id="type-client" class="anchor" href="#type-client" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>type Client</h4>
@@ -226,6 +217,20 @@ id = ? ,Value,1 支持完整的SQL语句与?占位符.对于?占位符的使用�
 <p>仅支持struct类型数据.需要通过 db tag来进行数据库字段映射</p>
 
 <h4>
+<a id="func-client-insertorupdate" class="anchor" href="#func-client-insertorupdate" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>func (*Client) InsertOrUpdate</h4>
+
+<div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> <span class="pl-en">(<span class="pl-v">this</span> *<span class="pl-v">Client</span>) <span class="pl-en">InsertOrUpdate</span></span>(<span class="pl-v">table</span> <span class="pl-v">string</span>, <span class="pl-v">v</span> <span class="pl-v">interface</span>{}) *<span class="pl-v">ClientExecResult</span></pre></div>
+
+<p>插入或更新行(当主键已存在的时候) SQL语句为: INSERT INTO .... ON DUPLICATE KEY UPDATE .... 全部字段更新</p>
+
+<h4>
+<a id="func-client-insertorupdatefields" class="anchor" href="#func-client-insertorupdatefields" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>func (*Client) InsertOrUpdateFields</h4>
+
+<div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> <span class="pl-en">(<span class="pl-v">this</span> *<span class="pl-v">Client</span>) <span class="pl-en">InsertOrUpdateFields</span></span>(<span class="pl-v">table</span> <span class="pl-v">string</span>, <span class="pl-v">v</span> <span class="pl-v">interface</span>{}, <span class="pl-v">updateFields</span> ...<span class="pl-v">string</span>) *<span class="pl-v">ClientExecResult</span></pre></div>
+
+<p>插入或更新行(当主键已存在的时候) SQL语句为: INSERT INTO .... ON DUPLICATE KEY UPDATE ....</p>
+
+<h4>
 <a id="func-client-ping" class="anchor" href="#func-client-ping" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>func (*Client) Ping</h4>
 
 <div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> <span class="pl-en">(<span class="pl-v">this</span> *<span class="pl-v">Client</span>) <span class="pl-en">Ping</span></span>() <span class="pl-v">error</span></pre></div>
@@ -273,12 +278,14 @@ id = ? ,Value,1 支持完整的SQL语句与?占位符.对于?占位符的使用�
 
 <div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> <span class="pl-en">(<span class="pl-v">this</span> *<span class="pl-v">ClientDNSConfigure</span>) <span class="pl-en">Parse</span></span>() <span class="pl-v">string</span></pre></div>
 
-<p>将起解析成字符串</p>
+<p>将起解析DNS格式的字符串</p>
 
 <h4>
 <a id="func-clientdnsconfigure-remove" class="anchor" href="#func-clientdnsconfigure-remove" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>func (*ClientDNSConfigure) Remove</h4>
 
 <div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> <span class="pl-en">(<span class="pl-v">this</span> *<span class="pl-v">ClientDNSConfigure</span>) <span class="pl-en">Remove</span></span>(<span class="pl-v">k</span> <span class="pl-v">string</span>) <span class="pl-v">bool</span></pre></div>
+
+<p>移除设置 Remove("timeout")</p>
 
 <h4>
 <a id="func-clientdnsconfigure-set" class="anchor" href="#func-clientdnsconfigure-set" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>func (*ClientDNSConfigure) Set</h4>
@@ -295,7 +302,7 @@ id = ? ,Value,1 支持完整的SQL语句与?占位符.对于?占位符的使用�
     <span class="pl-v">Err</span>    <span class="pl-k">error</span>
 }</pre></div>
 
-<p>Exec 的结果</p>
+<p>Client.Exec 的结果</p>
 
 <h4>
 <a id="type-clientqueryresult" class="anchor" href="#type-clientqueryresult" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>type ClientQueryResult</h4>
@@ -305,7 +312,7 @@ id = ? ,Value,1 支持完整的SQL语句与?占位符.对于?占位符的使用�
     <span class="pl-v">Err</span>  <span class="pl-k">error</span>
 }</pre></div>
 
-<p>Query 的结果</p>
+<p>Client.Query 的结果</p>
 
 <h4>
 <a id="func-clientqueryresult-firsttomap" class="anchor" href="#func-clientqueryresult-firsttomap" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>func (*ClientQueryResult) FirstToMap</h4>
@@ -332,14 +339,42 @@ id = ? ,Value,1 支持完整的SQL语句与?占位符.对于?占位符的使用�
 
 <div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> <span class="pl-en">(<span class="pl-v">this</span> *<span class="pl-v">ClientQueryResult</span>) <span class="pl-en">ToMap</span></span>() ([]<span class="pl-v">map</span>[<span class="pl-v">string</span>]<span class="pl-v">string</span>, <span class="pl-v">error</span>)</pre></div>
 
-<p>ToMap 将结果集转换为Map类型 这个操作不进行任何类型转换 因为这里的类型转换需要一次SQL去反射字段类型 更多的时候会得不偿失</p>
+<p>ToMap 将结果集转换为Map类型. 这个操作不进行任何类型转换. 因为这里的类型转换需要一次SQL去反射字段类型. 更多的时候会得不偿失.</p>
 
 <h4>
 <a id="func-clientqueryresult-tostruct" class="anchor" href="#func-clientqueryresult-tostruct" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>func (*ClientQueryResult) ToStruct</h4>
 
 <div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> <span class="pl-en">(<span class="pl-v">this</span> *<span class="pl-v">ClientQueryResult</span>) <span class="pl-en">ToStruct</span></span>(<span class="pl-v">containers</span> <span class="pl-v">interface</span>{}) <span class="pl-v">error</span></pre></div>
 
-<p>将结果集转换成一个struct 数组 var containers []Person ToStruct(&amp;containers)</p>
+<p>将结果集转换成一个struct 数组 var containers []Person</p>
+
+<p>ToStruct(&amp;containers) 对于struct类型,支持以下字段类型: int8</p>
+
+<p>int16</p>
+
+<p>int32</p>
+
+<p>int64</p>
+
+<p>int</p>
+
+<p>uint8</p>
+
+<p>uint16</p>
+
+<p>uint32</p>
+
+<p>uint64</p>
+
+<p>uint</p>
+
+<p>float32</p>
+
+<p>float64</p>
+
+<p>string</p>
+
+<p>[]byte</p>
 
       <footer class="site-footer">
         <span class="site-footer-owner"><a href="https://github.com/weixinhost/litedb">Litedb</a> is maintained by <a href="https://github.com/weixinhost">weixinhost</a>.</span>
