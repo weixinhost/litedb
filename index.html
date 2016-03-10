@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="UTF-8">
+    <title>Litedb by weixinhost</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="stylesheets/normalize.css" media="screen">
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/github-light.css" media="screen">
+  </head>
+  <body>
+    <section class="page-header">
+      <h1 class="project-name">Litedb</h1>
+      <h2 class="project-tagline">A lite mysql operator lib for golang</h2>
+      <a href="https://github.com/weixinhost/litedb" class="btn">View on GitHub</a>
+      <a href="https://github.com/weixinhost/litedb/zipball/master" class="btn">Download .zip</a>
+      <a href="https://github.com/weixinhost/litedb/tarball/master" class="btn">Download .tar.gz</a>
+    </section>
+
+    <section class="main-content">
+      <h3>
+<a id="litedb" class="anchor" href="#litedb" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>LiteDB</h3>
+
+<h4>
+<a id="intro" class="anchor" href="#intro" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Intro</h4>
+
+<pre><code>LiteDB 的核心设计目标是提供一个轻量级的SQL封装.
+LiteDB 不会对设计范式与Mysql本身做更多的侵入
+LiteDB 提供基本的SQL CURD封装
+LiteDB 不提供任何形式的SQLBuilder
+LiteDB 进行延迟连接
+</code></pre>
+
+<h4>
+<a id="dev-plan" class="anchor" href="#dev-plan" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Dev Plan</h4>
+
+<pre><code>1. 首先完成基本API的定型
+2. 进行大规模测试
+3. 保证跨协程级别安全
+4. 保证连接池的可用性
+5. 事务的支持
+</code></pre>
+
+<h4>
+<a id="init" class="anchor" href="#init" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Init</h4>
+
+<div class="highlight highlight-source-go"><pre>
+    <span class="pl-smi">host</span>        <span class="pl-k">:=</span> <span class="pl-s"><span class="pl-pds">"</span>127.0.0.1<span class="pl-pds">"</span></span>
+    <span class="pl-smi">port</span>        <span class="pl-k">:=</span> <span class="pl-c1">3306</span>
+    <span class="pl-smi">user</span>        <span class="pl-k">:=</span> <span class="pl-s"><span class="pl-pds">"</span>root<span class="pl-pds">"</span></span>
+    <span class="pl-smi">password</span>    <span class="pl-k">:=</span> <span class="pl-s"><span class="pl-pds">"</span>root<span class="pl-pds">"</span></span>
+    <span class="pl-smi">database</span>    <span class="pl-k">:=</span> <span class="pl-s"><span class="pl-pds">"</span>database_name<span class="pl-pds">"</span></span>
+
+   <span class="pl-smi">client</span> <span class="pl-k">:=</span> litedb.<span class="pl-c1">NewTcpClient</span>(host,port,user,password,database)
+</pre></div>
+
+<h4>
+<a id="configure" class="anchor" href="#configure" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Configure</h4>
+
+<div class="highlight highlight-source-go"><pre>
+    client.<span class="pl-smi">Config</span>.<span class="pl-c1">Set</span>(<span class="pl-s"><span class="pl-pds">"</span>timeout<span class="pl-pds">"</span></span>,<span class="pl-s"><span class="pl-pds">"</span>5<span class="pl-pds">"</span></span>)
+    client.<span class="pl-smi">Config</span>.<span class="pl-c1">Set</span>(<span class="pl-s"><span class="pl-pds">"</span>charset<span class="pl-pds">"</span></span>,<span class="pl-s"><span class="pl-pds">"</span>utf8<span class="pl-pds">"</span></span>)</pre></div>
+
+<h4>
+<a id="query" class="anchor" href="#query" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Query</h4>
+
+<div class="highlight highlight-source-go"><pre>
+ <span class="pl-smi">fullSql</span> <span class="pl-k">:=</span> <span class="pl-s"><span class="pl-pds">"</span>SELECT * FROM `my_table` LIMIT 10<span class="pl-pds">"</span></span>
+
+ <span class="pl-smi">ret</span> <span class="pl-k">:=</span> client.<span class="pl-c1">Query</span>(fullSql)
+
+ <span class="pl-smi">sql</span> <span class="pl-k">:=</span> <span class="pl-s"><span class="pl-pds">"</span>SELECT * FROM `my_table` where id = ?<span class="pl-pds">"</span></span>
+
+ <span class="pl-smi">ret</span> <span class="pl-k">:=</span> client.<span class="pl-c1">Query</span>(sql,<span class="pl-c1">1</span>)
+
+
+ <span class="pl-k">if</span> err.<span class="pl-smi">Err</span> != <span class="pl-c1">nil</span> {
+    <span class="pl-c">//errro</span>
+
+ }<span class="pl-k">else</span>{
+
+      maps,<span class="pl-smi">err</span> <span class="pl-k">:=</span> ret.<span class="pl-c1">ToMap</span>()   <span class="pl-c">//存储到一个[]map[string]string对象中</span>
+      first,<span class="pl-smi">err</span> <span class="pl-k">:=</span> ret.<span class="pl-c1">FirstToMap</span>() <span class="pl-c">//将首行存储到一个map[string]string对象中</span>
+
+      <span class="pl-k">type</span> <span class="pl-v">Temp</span> <span class="pl-k">struct</span> {
+
+        Id      <span class="pl-k">int</span> <span class="pl-s"><span class="pl-pds">`</span>db:"id"<span class="pl-pds">`</span></span>
+        Name    <span class="pl-k">string</span> <span class="pl-s"><span class="pl-pds">`</span>db:"name"<span class="pl-pds">`</span></span>
+
+      }
+
+     <span class="pl-k">var</span> <span class="pl-smi">listData</span> []<span class="pl-v">Temp</span>
+
+     <span class="pl-smi">err</span> <span class="pl-k">:=</span> ret.<span class="pl-c1">ToStruct</span>(&amp;listData)             <span class="pl-c">//将全部结果存储到结构体中,使用db:"mysql_field_name"的形式进行数据库字段映射</span>
+
+     <span class="pl-k">var</span> <span class="pl-smi">data</span> <span class="pl-v">Temp</span>
+
+     <span class="pl-smi">err</span> <span class="pl-k">:=</span> ret.<span class="pl-c1">FirstToStruct</span>(&amp;data)            <span class="pl-c">//将首行存储到一个结构体中</span>
+
+ }
+
+</pre></div>
+
+<h4>
+<a id="insert" class="anchor" href="#insert" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Insert</h4>
+
+<div class="highlight highlight-source-go"><pre>
+ <span class="pl-k">type</span> <span class="pl-v">Temp</span> <span class="pl-k">struct</span> {
+
+        <span class="pl-v">Id</span>      <span class="pl-k">int</span> <span class="pl-s"><span class="pl-pds">`</span>db:"id"<span class="pl-pds">`</span></span>
+        <span class="pl-v">Name</span>    <span class="pl-k">string</span> <span class="pl-s"><span class="pl-pds">`</span>db:"name"<span class="pl-pds">`</span></span>
+
+   }
+
+   <span class="pl-smi">newData</span> <span class="pl-k">:=</span> &amp;Temp{
+     <span class="pl-v">Name</span> : <span class="pl-s"><span class="pl-pds">"</span>my name<span class="pl-pds">"</span></span>
+   }
+
+
+    <span class="pl-smi">ret</span> <span class="pl-k">:=</span> client.<span class="pl-c1">Insert</span>(<span class="pl-s"><span class="pl-pds">"</span>table<span class="pl-pds">"</span></span>,newData)
+
+    <span class="pl-k">if</span> ret.<span class="pl-smi">Err</span> != <span class="pl-c1">nil</span> {
+
+    }
+</pre></div>
+
+<h4>
+<a id="update" class="anchor" href="#update" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Update</h4>
+
+<div class="highlight highlight-source-go"><pre>
+ <span class="pl-k">type</span> <span class="pl-v">Temp</span> <span class="pl-k">struct</span> {
+
+        <span class="pl-v">Id</span>      <span class="pl-k">int</span> <span class="pl-s"><span class="pl-pds">`</span>db:"id"<span class="pl-pds">`</span></span>
+        <span class="pl-v">Name</span>    <span class="pl-k">string</span> <span class="pl-s"><span class="pl-pds">`</span>db:"name"<span class="pl-pds">`</span></span>
+
+   }
+
+   <span class="pl-smi">newData</span> <span class="pl-k">:=</span> &amp;Temp{
+     <span class="pl-v">Name</span> : <span class="pl-s"><span class="pl-pds">"</span>my new name<span class="pl-pds">"</span></span>
+   }
+
+    <span class="pl-smi">ret</span> <span class="pl-k">:=</span> client.<span class="pl-c1">Insert</span>(<span class="pl-s"><span class="pl-pds">"</span>table<span class="pl-pds">"</span></span>,newData,<span class="pl-s"><span class="pl-pds">"</span>id=?<span class="pl-pds">"</span></span>,<span class="pl-c1">1</span>)
+
+    <span class="pl-k">if</span> ret.<span class="pl-smi">Err</span> != <span class="pl-c1">nil</span> {
+
+    }
+</pre></div>
+
+<h4>
+<a id="delete" class="anchor" href="#delete" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Delete</h4>
+
+<div class="highlight highlight-source-go"><pre>
+    <span class="pl-smi">ret</span> <span class="pl-k">:=</span> client.<span class="pl-c1">Delete</span>(<span class="pl-s"><span class="pl-pds">"</span>table<span class="pl-pds">"</span></span>,<span class="pl-s"><span class="pl-pds">"</span>id=?<span class="pl-pds">"</span></span>,<span class="pl-c1">1</span>)
+
+    <span class="pl-k">if</span> ret.<span class="pl-smi">Err</span> != <span class="pl-c1">nil</span> {
+
+    }
+</pre></div>
+
+<h2>
+<a id="litedb-1" class="anchor" href="#litedb-1" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>litedb</h2>
+
+<h2></h2>
+
+<pre><code>import "litedb"
+</code></pre>
+
+<h3>
+<a id="usage" class="anchor" href="#usage" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Usage</h3>
+
+<h4>
+<a id="type-client" class="anchor" href="#type-client" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>type Client</h4>
+
+<div class="highlight highlight-source-go"><pre><span class="pl-k">type</span> <span class="pl-v">Client</span> <span class="pl-k">struct</span> {
+    <span class="pl-v">Host</span>     <span class="pl-k">string</span>
+    <span class="pl-v">Port</span>     <span class="pl-k">uint32</span>
+    <span class="pl-v">User</span>     <span class="pl-k">string</span>
+    <span class="pl-v">Password</span> <span class="pl-k">string</span>
+    <span class="pl-v">Database</span> <span class="pl-k">string</span>
+    <span class="pl-v">Protocol</span> <span class="pl-k">string</span>
+    <span class="pl-v">Config</span>   *ClientDNSConfigure
+}</pre></div>
+
+<h4>
+<a id="func--newclient" class="anchor" href="#func--newclient" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>func  NewClient</h4>
+
+<div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> <span class="pl-en">NewClient</span>(<span class="pl-v">protocol</span> <span class="pl-v">string</span>, <span class="pl-v">host</span> <span class="pl-v">string</span>, <span class="pl-v">port</span> <span class="pl-v">uint32</span>, <span class="pl-v">user</span> <span class="pl-v">string</span>, <span class="pl-v">password</span> <span class="pl-v">string</span>, <span class="pl-v">database</span> <span class="pl-v">string</span>) *<span class="pl-v">Client</span></pre></div>
+
+<p>初始化数据库</p>
+
+<h4>
+<a id="func--newtcpclient" class="anchor" href="#func--newtcpclient" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>func  NewTcpClient</h4>
+
+<div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> <span class="pl-en">NewTcpClient</span>(<span class="pl-v">host</span> <span class="pl-v">string</span>, <span class="pl-v">port</span> <span class="pl-v">uint32</span>, <span class="pl-v">user</span> <span class="pl-v">string</span>, <span class="pl-v">password</span> <span class="pl-v">string</span>, <span class="pl-v">database</span> <span class="pl-v">string</span>) *<span class="pl-v">Client</span></pre></div>
+
+<p>初始化一个TCP客户端</p>
+
+<h4>
+<a id="func-client-close" class="anchor" href="#func-client-close" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>func (*Client) Close</h4>
+
+<div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> <span class="pl-en">(<span class="pl-v">this</span> *<span class="pl-v">Client</span>) <span class="pl-en">Close</span></span>() <span class="pl-v">error</span></pre></div>
+
+<p>关闭数据库</p>
+
+<h4>
+<a id="func-client-delete" class="anchor" href="#func-client-delete" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>func (*Client) Delete</h4>
+
+<div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> <span class="pl-en">(<span class="pl-v">this</span> *<span class="pl-v">Client</span>) <span class="pl-en">Delete</span></span>(<span class="pl-v">table</span> <span class="pl-v">string</span>, <span class="pl-v">whereFmt</span> <span class="pl-v">string</span>, <span class="pl-v">whereValue</span> ...<span class="pl-v">interface</span>{}) *<span class="pl-v">ClientExecResult</span></pre></div>
+
+<p>根据Where条件删除数据</p>
+
+<h4>
+<a id="func-client-exec" class="anchor" href="#func-client-exec" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>func (*Client) Exec</h4>
+
+<div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> <span class="pl-en">(<span class="pl-v">this</span> *<span class="pl-v">Client</span>) <span class="pl-en">Exec</span></span>(<span class="pl-v">sqlFmt</span> <span class="pl-v">string</span>, <span class="pl-v">sqlValue</span> ...<span class="pl-v">interface</span>{}) *<span class="pl-v">ClientExecResult</span></pre></div>
+
+<p>UPDATE <code>Table</code> SET <code>field_1</code> = Value Where id = 1 UPDATE SET <code>field_1</code> = ? WHERE
+id = ? ,Value,1 支持完整的SQL语句与?占位符.对于?占位符的使用请参考官方文档 ?占位符是字符串安全的,请尽量使用?占位符</p>
+
+<h4>
+<a id="func-client-insert" class="anchor" href="#func-client-insert" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>func (*Client) Insert</h4>
+
+<div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> <span class="pl-en">(<span class="pl-v">this</span> *<span class="pl-v">Client</span>) <span class="pl-en">Insert</span></span>(<span class="pl-v">table</span> <span class="pl-v">string</span>, <span class="pl-v">v</span> <span class="pl-v">interface</span>{}) *<span class="pl-v">ClientExecResult</span></pre></div>
+
+<p>仅支持struct类型数据.需要通过 db tag来进行数据库字段映射</p>
+
+<h4>
+<a id="func-client-ping" class="anchor" href="#func-client-ping" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>func (*Client) Ping</h4>
+
+<div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> <span class="pl-en">(<span class="pl-v">this</span> *<span class="pl-v">Client</span>) <span class="pl-en">Ping</span></span>() <span class="pl-v">error</span></pre></div>
+
+<p>ping</p>
+
+<h4>
+<a id="func-client-query" class="anchor" href="#func-client-query" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>func (*Client) Query</h4>
+
+<div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> <span class="pl-en">(<span class="pl-v">this</span> *<span class="pl-v">Client</span>) <span class="pl-en">Query</span></span>(<span class="pl-v">sqlFmt</span> <span class="pl-v">string</span>, <span class="pl-v">sqlValue</span> ...<span class="pl-v">interface</span>{}) *<span class="pl-v">ClientQueryResult</span></pre></div>
+
+<p>SELECT * FROM Table WHERE id = 1 SELECT * FROM Table WHERE id = ?
+支持完整的SQL语句与?占位符.对于?占位符的使用请参考官方文档 ?占位符是字符串安全的,请尽量使用?占位符</p>
+
+<h4>
+<a id="func-client-update" class="anchor" href="#func-client-update" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>func (*Client) Update</h4>
+
+<div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> <span class="pl-en">(<span class="pl-v">this</span> *<span class="pl-v">Client</span>) <span class="pl-en">Update</span></span>(<span class="pl-v">table</span> <span class="pl-v">string</span>, <span class="pl-v">v</span> <span class="pl-v">interface</span>{}, <span class="pl-v">whereFmt</span> <span class="pl-v">string</span>, <span class="pl-v">whereValue</span> ...<span class="pl-v">interface</span>{}) *<span class="pl-v">ClientExecResult</span></pre></div>
+
+<p>仅支持struct类型数据.需要通过 db tag来进行数据库字段映射 where 条件写法 id = ?</p>
+
+<h4>
+<a id="func-client-updatefields" class="anchor" href="#func-client-updatefields" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>func (*Client) UpdateFields</h4>
+
+<div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> <span class="pl-en">(<span class="pl-v">this</span> *<span class="pl-v">Client</span>) <span class="pl-en">UpdateFields</span></span>(<span class="pl-v">table</span> <span class="pl-v">string</span>, <span class="pl-v">v</span> <span class="pl-v">interface</span>{}, <span class="pl-v">fields</span> []<span class="pl-v">string</span>, <span class="pl-v">whereFmt</span> <span class="pl-v">string</span>, <span class="pl-v">whereValue</span> ...<span class="pl-v">interface</span>{}) *<span class="pl-v">ClientExecResult</span></pre></div>
+
+<p>部分字段更新 该接口的意义是struct类型为完整的数据库字段映射.但某些时候我们仅仅需要更新部分字段.此时,如果使用完整映射的进行更新操作 则更容易误覆盖.
+因此提供了这个接口进行部分字段更新. fields 就是需要更新的数据库字段名称 v,whereFmt,WhereValue 等值意义不变</p>
+
+<h4>
+<a id="type-clientdnsconfigure" class="anchor" href="#type-clientdnsconfigure" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>type ClientDNSConfigure</h4>
+
+<div class="highlight highlight-source-go"><pre><span class="pl-k">type</span> <span class="pl-v">ClientDNSConfigure</span> <span class="pl-k">struct</span> {
+}</pre></div>
+
+<p>客户端DNS配置</p>
+
+<h4>
+<a id="func--newclientdnsconfigure" class="anchor" href="#func--newclientdnsconfigure" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>func  NewClientDnsConfigure</h4>
+
+<div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> <span class="pl-en">NewClientDnsConfigure</span>() *<span class="pl-v">ClientDNSConfigure</span></pre></div>
+
+<h4>
+<a id="func-clientdnsconfigure-parse" class="anchor" href="#func-clientdnsconfigure-parse" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>func (*ClientDNSConfigure) Parse</h4>
+
+<div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> <span class="pl-en">(<span class="pl-v">this</span> *<span class="pl-v">ClientDNSConfigure</span>) <span class="pl-en">Parse</span></span>() <span class="pl-v">string</span></pre></div>
+
+<p>将起解析成字符串</p>
+
+<h4>
+<a id="func-clientdnsconfigure-remove" class="anchor" href="#func-clientdnsconfigure-remove" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>func (*ClientDNSConfigure) Remove</h4>
+
+<div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> <span class="pl-en">(<span class="pl-v">this</span> *<span class="pl-v">ClientDNSConfigure</span>) <span class="pl-en">Remove</span></span>(<span class="pl-v">k</span> <span class="pl-v">string</span>) <span class="pl-v">bool</span></pre></div>
+
+<h4>
+<a id="func-clientdnsconfigure-set" class="anchor" href="#func-clientdnsconfigure-set" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>func (*ClientDNSConfigure) Set</h4>
+
+<div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> <span class="pl-en">(<span class="pl-v">this</span> *<span class="pl-v">ClientDNSConfigure</span>) <span class="pl-en">Set</span></span>(<span class="pl-v">k</span>, <span class="pl-v">v</span> <span class="pl-v">string</span>) <span class="pl-v">bool</span></pre></div>
+
+<p>设置一个客户端DNS设置. Set("timeout","5") 详细信息请参考golang mysql DNS语法</p>
+
+<h4>
+<a id="type-clientexecresult" class="anchor" href="#type-clientexecresult" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>type ClientExecResult</h4>
+
+<div class="highlight highlight-source-go"><pre><span class="pl-k">type</span> <span class="pl-v">ClientExecResult</span> <span class="pl-k">struct</span> {
+    <span class="pl-v">Result</span> sql.<span class="pl-smi">Result</span>
+    <span class="pl-v">Err</span>    <span class="pl-k">error</span>
+}</pre></div>
+
+<p>Exec 的结果</p>
+
+<h4>
+<a id="type-clientqueryresult" class="anchor" href="#type-clientqueryresult" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>type ClientQueryResult</h4>
+
+<div class="highlight highlight-source-go"><pre><span class="pl-k">type</span> <span class="pl-v">ClientQueryResult</span> <span class="pl-k">struct</span> {
+    <span class="pl-v">Rows</span> *sql.<span class="pl-smi">Rows</span>
+    <span class="pl-v">Err</span>  <span class="pl-k">error</span>
+}</pre></div>
+
+<p>Query 的结果</p>
+
+<h4>
+<a id="func-clientqueryresult-firsttomap" class="anchor" href="#func-clientqueryresult-firsttomap" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>func (*ClientQueryResult) FirstToMap</h4>
+
+<div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> <span class="pl-en">(<span class="pl-v">this</span> *<span class="pl-v">ClientQueryResult</span>) <span class="pl-en">FirstToMap</span></span>() (<span class="pl-v">map</span>[<span class="pl-v">string</span>]<span class="pl-v">string</span>, <span class="pl-v">error</span>)</pre></div>
+
+<p>将Rows中的首行解析成一个map[string]string</p>
+
+<h4>
+<a id="func-clientqueryresult-firsttostruct" class="anchor" href="#func-clientqueryresult-firsttostruct" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>func (*ClientQueryResult) FirstToStruct</h4>
+
+<div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> <span class="pl-en">(<span class="pl-v">this</span> *<span class="pl-v">ClientQueryResult</span>) <span class="pl-en">FirstToStruct</span></span>(<span class="pl-v">v</span> <span class="pl-v">interface</span>{}) <span class="pl-v">error</span></pre></div>
+
+<p>将首行解析成一个Struct ,需要传递一个 struct的指针. struct 定义中使用标签 tag 来进行数据库字段映射,比如 struct {</p>
+
+<pre><code>     Id int `db:"id"`
+  Name string `db:"name"`
+</code></pre>
+
+<p>}</p>
+
+<h4>
+<a id="func-clientqueryresult-tomap" class="anchor" href="#func-clientqueryresult-tomap" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>func (*ClientQueryResult) ToMap</h4>
+
+<div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> <span class="pl-en">(<span class="pl-v">this</span> *<span class="pl-v">ClientQueryResult</span>) <span class="pl-en">ToMap</span></span>() ([]<span class="pl-v">map</span>[<span class="pl-v">string</span>]<span class="pl-v">string</span>, <span class="pl-v">error</span>)</pre></div>
+
+<p>ToMap 将结果集转换为Map类型 这个操作不进行任何类型转换 因为这里的类型转换需要一次SQL去反射字段类型 更多的时候会得不偿失</p>
+
+<h4>
+<a id="func-clientqueryresult-tostruct" class="anchor" href="#func-clientqueryresult-tostruct" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>func (*ClientQueryResult) ToStruct</h4>
+
+<div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> <span class="pl-en">(<span class="pl-v">this</span> *<span class="pl-v">ClientQueryResult</span>) <span class="pl-en">ToStruct</span></span>(<span class="pl-v">containers</span> <span class="pl-v">interface</span>{}) <span class="pl-v">error</span></pre></div>
+
+<p>将结果集转换成一个struct 数组 var containers []Person ToStruct(&amp;containers)</p>
+
+      <footer class="site-footer">
+        <span class="site-footer-owner"><a href="https://github.com/weixinhost/litedb">Litedb</a> is maintained by <a href="https://github.com/weixinhost">weixinhost</a>.</span>
+
+        <span class="site-footer-credits">This page was generated by <a href="https://pages.github.com">GitHub Pages</a> using the <a href="https://github.com/jasonlong/cayman-theme">Cayman theme</a> by <a href="https://twitter.com/jasonlong">Jason Long</a>.</span>
+      </footer>
+
+    </section>
+
+  
+  </body>
+</html>
