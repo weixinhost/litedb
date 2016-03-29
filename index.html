@@ -158,12 +158,8 @@ LiteDB 使用 `database/sql` 和 mysql驱动
 <h2>
 <a id="usage" class="anchor" href="#usage" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Usage</h2>
 
-<hr>
-
-<h4>
-<a id="type-client" class="anchor" href="#type-client" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>type Client</h4>
-
 <div class="highlight highlight-source-go"><pre><span class="pl-k">type</span> <span class="pl-v">Client</span> <span class="pl-k">struct</span> {
+    <span class="pl-v">Sql</span>
     <span class="pl-v">Host</span>     <span class="pl-k">string</span>
     <span class="pl-v">Port</span>     <span class="pl-k">uint32</span>
     <span class="pl-v">User</span>     <span class="pl-k">string</span>
@@ -173,12 +169,14 @@ LiteDB 使用 `database/sql` 和 mysql驱动
     <span class="pl-v">Config</span>   *ClientDNSConfigure
 }</pre></div>
 
+<p>客户端</p>
+
 <h4>
 <a id="func--newclient" class="anchor" href="#func--newclient" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>func  NewClient</h4>
 
 <div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> <span class="pl-en">NewClient</span>(<span class="pl-v">protocol</span> <span class="pl-v">string</span>, <span class="pl-v">host</span> <span class="pl-v">string</span>, <span class="pl-v">port</span> <span class="pl-v">uint32</span>, <span class="pl-v">user</span> <span class="pl-v">string</span>, <span class="pl-v">password</span> <span class="pl-v">string</span>, <span class="pl-v">database</span> <span class="pl-v">string</span>) *<span class="pl-v">Client</span></pre></div>
 
-<p>初始化数据库</p>
+<p>初始化数据库 此时并未打开连接池 只有在真实需要与数据库交互的时候才会进行连接.</p>
 
 <h4>
 <a id="func--newtcpclient" class="anchor" href="#func--newtcpclient" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>func  NewTcpClient</h4>
@@ -188,18 +186,18 @@ LiteDB 使用 `database/sql` 和 mysql驱动
 <p>初始化一个TCP客户端</p>
 
 <h4>
+<a id="func-client-begin" class="anchor" href="#func-client-begin" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>func (*Client) Begin</h4>
+
+<div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> <span class="pl-en">(<span class="pl-v">this</span> *<span class="pl-v">Client</span>) <span class="pl-en">Begin</span></span>() (*<span class="pl-v">Transaction</span>, <span class="pl-v">error</span>)</pre></div>
+
+<p>开启事务</p>
+
+<h4>
 <a id="func-client-close" class="anchor" href="#func-client-close" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>func (*Client) Close</h4>
 
 <div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> <span class="pl-en">(<span class="pl-v">this</span> *<span class="pl-v">Client</span>) <span class="pl-en">Close</span></span>() <span class="pl-v">error</span></pre></div>
 
 <p>关闭数据库</p>
-
-<h4>
-<a id="func-client-delete" class="anchor" href="#func-client-delete" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>func (*Client) Delete</h4>
-
-<div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> <span class="pl-en">(<span class="pl-v">this</span> *<span class="pl-v">Client</span>) <span class="pl-en">Delete</span></span>(<span class="pl-v">table</span> <span class="pl-v">string</span>, <span class="pl-v">whereFmt</span> <span class="pl-v">string</span>, <span class="pl-v">whereValue</span> ...<span class="pl-v">interface</span>{}) *<span class="pl-v">ClientExecResult</span></pre></div>
-
-<p>根据Where条件删除数据</p>
 
 <h4>
 <a id="func-client-exec" class="anchor" href="#func-client-exec" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>func (*Client) Exec</h4>
@@ -208,27 +206,6 @@ LiteDB 使用 `database/sql` 和 mysql驱动
 
 <p>UPDATE <code>Table</code> SET <code>field_1</code> = Value Where id = 1 UPDATE SET <code>field_1</code> = ? WHERE
 id = ? ,Value,1 支持完整的SQL语句与?占位符.对于?占位符的使用请参考官方文档 ?占位符是字符串安全的,请尽量使用?占位符</p>
-
-<h4>
-<a id="func-client-insert" class="anchor" href="#func-client-insert" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>func (*Client) Insert</h4>
-
-<div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> <span class="pl-en">(<span class="pl-v">this</span> *<span class="pl-v">Client</span>) <span class="pl-en">Insert</span></span>(<span class="pl-v">table</span> <span class="pl-v">string</span>, <span class="pl-v">v</span> <span class="pl-v">interface</span>{}) *<span class="pl-v">ClientExecResult</span></pre></div>
-
-<p>仅支持struct类型数据.需要通过 db tag来进行数据库字段映射</p>
-
-<h4>
-<a id="func-client-insertorupdate" class="anchor" href="#func-client-insertorupdate" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>func (*Client) InsertOrUpdate</h4>
-
-<div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> <span class="pl-en">(<span class="pl-v">this</span> *<span class="pl-v">Client</span>) <span class="pl-en">InsertOrUpdate</span></span>(<span class="pl-v">table</span> <span class="pl-v">string</span>, <span class="pl-v">v</span> <span class="pl-v">interface</span>{}) *<span class="pl-v">ClientExecResult</span></pre></div>
-
-<p>插入或更新行(当主键已存在的时候) SQL语句为: INSERT INTO .... ON DUPLICATE KEY UPDATE .... 全部字段更新</p>
-
-<h4>
-<a id="func-client-insertorupdatefields" class="anchor" href="#func-client-insertorupdatefields" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>func (*Client) InsertOrUpdateFields</h4>
-
-<div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> <span class="pl-en">(<span class="pl-v">this</span> *<span class="pl-v">Client</span>) <span class="pl-en">InsertOrUpdateFields</span></span>(<span class="pl-v">table</span> <span class="pl-v">string</span>, <span class="pl-v">v</span> <span class="pl-v">interface</span>{}, <span class="pl-v">updateFields</span> ...<span class="pl-v">string</span>) *<span class="pl-v">ClientExecResult</span></pre></div>
-
-<p>插入或更新行(当主键已存在的时候) SQL语句为: INSERT INTO .... ON DUPLICATE KEY UPDATE ....</p>
 
 <h4>
 <a id="func-client-ping" class="anchor" href="#func-client-ping" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>func (*Client) Ping</h4>
@@ -244,21 +221,6 @@ id = ? ,Value,1 支持完整的SQL语句与?占位符.对于?占位符的使用�
 
 <p>SELECT * FROM Table WHERE id = 1 SELECT * FROM Table WHERE id = ?
 支持完整的SQL语句与?占位符.对于?占位符的使用请参考官方文档 ?占位符是字符串安全的,请尽量使用?占位符</p>
-
-<h4>
-<a id="func-client-update" class="anchor" href="#func-client-update" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>func (*Client) Update</h4>
-
-<div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> <span class="pl-en">(<span class="pl-v">this</span> *<span class="pl-v">Client</span>) <span class="pl-en">Update</span></span>(<span class="pl-v">table</span> <span class="pl-v">string</span>, <span class="pl-v">v</span> <span class="pl-v">interface</span>{}, <span class="pl-v">whereFmt</span> <span class="pl-v">string</span>, <span class="pl-v">whereValue</span> ...<span class="pl-v">interface</span>{}) *<span class="pl-v">ClientExecResult</span></pre></div>
-
-<p>仅支持struct类型数据.需要通过 db tag来进行数据库字段映射 where 条件写法 id = ?</p>
-
-<h4>
-<a id="func-client-updatefields" class="anchor" href="#func-client-updatefields" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>func (*Client) UpdateFields</h4>
-
-<div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> <span class="pl-en">(<span class="pl-v">this</span> *<span class="pl-v">Client</span>) <span class="pl-en">UpdateFields</span></span>(<span class="pl-v">table</span> <span class="pl-v">string</span>, <span class="pl-v">v</span> <span class="pl-v">interface</span>{}, <span class="pl-v">fields</span> []<span class="pl-v">string</span>, <span class="pl-v">whereFmt</span> <span class="pl-v">string</span>, <span class="pl-v">whereValue</span> ...<span class="pl-v">interface</span>{}) *<span class="pl-v">ClientExecResult</span></pre></div>
-
-<p>部分字段更新 该接口的意义是struct类型为完整的数据库字段映射.但某些时候我们仅仅需要更新部分字段.此时,如果使用完整映射的进行更新操作 则更容易误覆盖.
-因此提供了这个接口进行部分字段更新. fields 就是需要更新的数据库字段名称 v,whereFmt,WhereValue 等值意义不变</p>
 
 <h4>
 <a id="type-clientdnsconfigure" class="anchor" href="#type-clientdnsconfigure" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>type ClientDNSConfigure</h4>
@@ -375,6 +337,134 @@ id = ? ,Value,1 支持完整的SQL语句与?占位符.对于?占位符的使用�
 <p>string</p>
 
 <p>[]byte</p>
+
+<h4>
+<a id="type-sql" class="anchor" href="#type-sql" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>type Sql</h4>
+
+<div class="highlight highlight-source-go"><pre><span class="pl-k">type</span> <span class="pl-v">Sql</span> <span class="pl-k">struct</span>{}</pre></div>
+
+<p>Sql操作集</p>
+
+<h4>
+<a id="func-sql-batchinsert" class="anchor" href="#func-sql-batchinsert" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>func (*Sql) BatchInsert</h4>
+
+<div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> <span class="pl-en">(<span class="pl-v">this</span> *<span class="pl-v">Sql</span>) <span class="pl-en">BatchInsert</span></span>(<span class="pl-v">table</span> <span class="pl-v">string</span>, <span class="pl-v">vs</span> <span class="pl-v">interface</span>{}) *<span class="pl-v">ClientExecResult</span></pre></div>
+
+<p>批量插入 SQL语句为: REPLACE INTO <code>%s</code> (field,field) VALUES (?,?),(?,?) 我们为什么使用REPLACE
+INTO 来支持批量插入. 使用Insert Into 的问题是全部待插入的数据行是事务一致的.因此,对于一次插入中,只要有行已经存在,则全部插入失败.</p>
+
+<h4>
+<a id="func-sql-delete" class="anchor" href="#func-sql-delete" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>func (*Sql) Delete</h4>
+
+<div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> <span class="pl-en">(<span class="pl-v">this</span> *<span class="pl-v">Sql</span>) <span class="pl-en">Delete</span></span>(<span class="pl-v">table</span> <span class="pl-v">string</span>, <span class="pl-v">whereFmt</span> <span class="pl-v">string</span>, <span class="pl-v">whereValue</span> ...<span class="pl-v">interface</span>{}) *<span class="pl-v">ClientExecResult</span></pre></div>
+
+<p>根据Where条件删除数据</p>
+
+<h4>
+<a id="func-sql-exec" class="anchor" href="#func-sql-exec" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>func (*Sql) Exec</h4>
+
+<div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> <span class="pl-en">(<span class="pl-v">this</span> *<span class="pl-v">Sql</span>) <span class="pl-en">Exec</span></span>(<span class="pl-v">sqlFmt</span> <span class="pl-v">string</span>, <span class="pl-v">sqlValue</span> ...<span class="pl-v">interface</span>{}) *<span class="pl-v">ClientExecResult</span></pre></div>
+
+<p>not implement anythings</p>
+
+<h4>
+<a id="func-sql-insert" class="anchor" href="#func-sql-insert" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>func (*Sql) Insert</h4>
+
+<div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> <span class="pl-en">(<span class="pl-v">this</span> *<span class="pl-v">Sql</span>) <span class="pl-en">Insert</span></span>(<span class="pl-v">table</span> <span class="pl-v">string</span>, <span class="pl-v">v</span> <span class="pl-v">interface</span>{}) *<span class="pl-v">ClientExecResult</span></pre></div>
+
+<p>对Struct类型的支持,使用 db tag 进行数据库字段映射 对Map类型会将value转换为string.请确保map类型中只包含基本数据类型</p>
+
+<h4>
+<a id="func-sql-insertorupdate" class="anchor" href="#func-sql-insertorupdate" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>func (*Sql) InsertOrUpdate</h4>
+
+<div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> <span class="pl-en">(<span class="pl-v">this</span> *<span class="pl-v">Sql</span>) <span class="pl-en">InsertOrUpdate</span></span>(<span class="pl-v">table</span> <span class="pl-v">string</span>, <span class="pl-v">v</span> <span class="pl-v">interface</span>{}) *<span class="pl-v">ClientExecResult</span></pre></div>
+
+<p>插入或更新行(当主键已存在的时候) SQL语句为: INSERT INTO .... ON DUPLICATE KEY UPDATE .... 全部字段更新</p>
+
+<h4>
+<a id="func-sql-insertorupdatefields" class="anchor" href="#func-sql-insertorupdatefields" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>func (*Sql) InsertOrUpdateFields</h4>
+
+<div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> <span class="pl-en">(<span class="pl-v">this</span> *<span class="pl-v">Sql</span>) <span class="pl-en">InsertOrUpdateFields</span></span>(<span class="pl-v">table</span> <span class="pl-v">string</span>, <span class="pl-v">v</span> <span class="pl-v">interface</span>{}, <span class="pl-v">updateFields</span> ...<span class="pl-v">string</span>) *<span class="pl-v">ClientExecResult</span></pre></div>
+
+<p>map类型无必要使用该方法 插入或更新行(当主键已存在的时候) SQL语句为: INSERT INTO .... ON DUPLICATE KEY UPDATE
+.... 可以指定更新字段</p>
+
+<h4>
+<a id="func-sql-query" class="anchor" href="#func-sql-query" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>func (*Sql) Query</h4>
+
+<div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> <span class="pl-en">(<span class="pl-v">this</span> *<span class="pl-v">Sql</span>) <span class="pl-en">Query</span></span>(<span class="pl-v">sqlFmt</span> <span class="pl-v">string</span>, <span class="pl-v">sqlValue</span> ...<span class="pl-v">interface</span>{}) *<span class="pl-v">ClientQueryResult</span></pre></div>
+
+<p>not implement anythings</p>
+
+<h4>
+<a id="func-sql-update" class="anchor" href="#func-sql-update" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>func (*Sql) Update</h4>
+
+<div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> <span class="pl-en">(<span class="pl-v">this</span> *<span class="pl-v">Sql</span>) <span class="pl-en">Update</span></span>(<span class="pl-v">table</span> <span class="pl-v">string</span>, <span class="pl-v">v</span> <span class="pl-v">interface</span>{}, <span class="pl-v">whereFmt</span> <span class="pl-v">string</span>, <span class="pl-v">whereValue</span> ...<span class="pl-v">interface</span>{}) *<span class="pl-v">ClientExecResult</span></pre></div>
+
+<p>对Struct类型的支持,使用 db tag 进行数据库字段映射 对Map类型会将value转换为string.请确保map类型中只包含基本数据类型 where
+条件写法 id = ?</p>
+
+<h4>
+<a id="func-sql-updatefields" class="anchor" href="#func-sql-updatefields" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>func (*Sql) UpdateFields</h4>
+
+<div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> <span class="pl-en">(<span class="pl-v">this</span> *<span class="pl-v">Sql</span>) <span class="pl-en">UpdateFields</span></span>(<span class="pl-v">table</span> <span class="pl-v">string</span>, <span class="pl-v">v</span> <span class="pl-v">interface</span>{}, <span class="pl-v">fields</span> []<span class="pl-v">string</span>, <span class="pl-v">whereFmt</span> <span class="pl-v">string</span>, <span class="pl-v">whereValue</span> ...<span class="pl-v">interface</span>{}) *<span class="pl-v">ClientExecResult</span></pre></div>
+
+<p>map类型无必要使用该方法 部分字段更新
+该接口的意义是struct类型为完整的数据库字段映射.但某些时候我们仅仅需要更新部分字段.此时,如果使用完整映射的进行更新操作 则更容易误覆盖.
+因此提供了这个接口进行部分字段更新. fields 就是需要更新的数据库字段名称 v,whereFmt,WhereValue 等值意义不变</p>
+
+<h4>
+<a id="type-transaction" class="anchor" href="#type-transaction" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>type Transaction</h4>
+
+<div class="highlight highlight-source-go"><pre><span class="pl-k">type</span> <span class="pl-v">Transaction</span> <span class="pl-k">struct</span> {
+    <span class="pl-v">Sql</span>
+}</pre></div>
+
+<p>事务客户端</p>
+
+<h4>
+<a id="func-transaction-commit" class="anchor" href="#func-transaction-commit" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>func (*Transaction) Commit</h4>
+
+<div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> <span class="pl-en">(<span class="pl-v">this</span> *<span class="pl-v">Transaction</span>) <span class="pl-en">Commit</span></span>() <span class="pl-v">error</span></pre></div>
+
+<p>提交事务</p>
+
+<h4>
+<a id="func-transaction-exec" class="anchor" href="#func-transaction-exec" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>func (*Transaction) Exec</h4>
+
+<div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> <span class="pl-en">(<span class="pl-v">this</span> *<span class="pl-v">Transaction</span>) <span class="pl-en">Exec</span></span>(<span class="pl-v">sqlFmt</span> <span class="pl-v">string</span>, <span class="pl-v">sqlValue</span> ...<span class="pl-v">interface</span>{}) *<span class="pl-v">ClientExecResult</span></pre></div>
+
+<p>UPDATE <code>Table</code> SET <code>field_1</code> = Value Where id = 1 UPDATE SET <code>field_1</code> = ? WHERE
+id = ? ,Value,1 支持完整的SQL语句与?占位符.对于?占位符的使用请参考官方文档 ?占位符是字符串安全的,请尽量使用?占位符</p>
+
+<h4>
+<a id="func-transaction-query" class="anchor" href="#func-transaction-query" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>func (*Transaction) Query</h4>
+
+<div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> <span class="pl-en">(<span class="pl-v">this</span> *<span class="pl-v">Transaction</span>) <span class="pl-en">Query</span></span>(<span class="pl-v">sqlFmt</span> <span class="pl-v">string</span>, <span class="pl-v">sqlValue</span> ...<span class="pl-v">interface</span>{}) *<span class="pl-v">ClientQueryResult</span></pre></div>
+
+<p>SELECT * FROM Table WHERE id = 1 SELECT * FROM Table WHERE id = ?
+支持完整的SQL语句与?占位符.对于?占位符的使用请参考官方文档 ?占位符是字符串安全的,请尽量使用?占位符</p>
+
+<h4>
+<a id="func-transaction-roolback" class="anchor" href="#func-transaction-roolback" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>func (*Transaction) Roolback</h4>
+
+<div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> <span class="pl-en">(<span class="pl-v">this</span> *<span class="pl-v">Transaction</span>) <span class="pl-en">Roolback</span></span>() <span class="pl-v">error</span></pre></div>
+
+<p>回滚事务</p>
+
+<h4>
+<a id="type-unmarshalbinary" class="anchor" href="#type-unmarshalbinary" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>type UnmarshalBinary</h4>
+
+<div class="highlight highlight-source-go"><pre><span class="pl-k">type</span> <span class="pl-v">UnmarshalBinary</span> <span class="pl-k">interface</span> {
+    <span class="pl-c1">UnmarshalDB</span>(data []<span class="pl-k">byte</span>) <span class="pl-k">error</span>
+}</pre></div>
+
+<h4>
+<a id="type-marshalbinary" class="anchor" href="#type-marshalbinary" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>type MarshalBinary</h4>
+
+<div class="highlight highlight-source-go"><pre><span class="pl-k">type</span> <span class="pl-v">MarshalBinary</span> <span class="pl-k">interface</span> {
+    <span class="pl-c1">MarshalDB</span>() ([]<span class="pl-k">byte</span>, <span class="pl-k">error</span>)
+}</pre></div>
 
       <footer class="site-footer">
         <span class="site-footer-owner"><a href="https://github.com/weixinhost/litedb">Litedb</a> is maintained by <a href="https://github.com/weixinhost">weixinhost</a>.</span>
