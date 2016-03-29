@@ -2,7 +2,6 @@ package utils
 
 import (
 	"testing"
-	"litedb"
 )
 
 func TestBasic(t *testing.T) {
@@ -69,6 +68,15 @@ func TestBasicAdvance(t *testing.T) {
 
 	t.Error(ParseWhereMap(where))
 }
+
+
+
+func TestError(t *testing.T) {
+
+	where := false
+	t.Error(ParseWhereMap(where))
+}
+
 
 
 
