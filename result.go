@@ -21,6 +21,16 @@ type ClientQueryResult struct {
 	Err error
 }
 
+
+type MarshalBinary interface{
+	MarshalDB() ([]byte,error)
+}
+
+type UnmarshalBinary interface{
+	UnmarshalDB(data []byte) (error)
+}
+
+
 //ToMap 将结果集转换为Map类型.
 //这个操作不进行任何类型转换.
 //因为这里的类型转换需要一次SQL去反射字段类型.
@@ -315,6 +325,18 @@ func mapToReflect(mapV map[string]string,t reflect.Type,p reflect.Value) error{
 func StructToMap(structV interface{}) (map[string]string,error){
 
 	t := reflect.TypeOf(structV)
+	
+	if t.Kind() == reflect.Map {
+
+		 retMap := make(map[string]string,0)
+
+		for k,v := range structV.(map[string]interface{}) {
+			retMap[k] = ToStr(v)
+		}
+
+		return retMap,nil
+	}
+
 	p := reflect.ValueOf(structV)
 
 	if p.Kind() == reflect.Ptr {

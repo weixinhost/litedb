@@ -2,143 +2,12 @@
 --
     import "litedb"
 
-一个轻便以及追求SQL性能的MYSQL客户端
-
-#### Intro
-
-    LiteDB 的核心设计目标是提供一个轻量级的SQL封装.
-    LiteDB 不会对设计范式与Mysql本身做更多的侵入
-    LiteDB 提供基本的SQL CURD封装
-    LiteDB 不提供任何形式的SQLBuilder
-    LiteDB 使用 `database/sql` 和 mysql驱动
-
-#### Init
-
-```go
-
-    host        := "127.0.0.1"
-    port        := 3306
-    user        := "root"
-    password    := "root"
-    database    := "database_name"
-
-   client := litedb.NewTcpClient(host,port,user,password,database)
-
-```
-
-#### Configure
-
-```go
-
-    client.Config.Set("timeout","5")
-    client.Config.Set("charset","utf8")
-```
-
-#### Query
-
-```go
-
- fullSql := "SELECT * FROM `my_table` LIMIT 10"
-
- ret := client.Query(fullSql)
-
- sql := "SELECT * FROM `my_table` where id = ?"
-
- ret := client.Query(sql,1)
-
-
- if err.Err != nil {
-    //errro
-
- }else{
-
-      maps,err := ret.ToMap()   //存储到一个[]map[string]string对象中
-      first,err := ret.FirstToMap() //将首行存储到一个map[string]string对象中
-
-      type Temp struct {
-
-        Id      int `db:"id"`
-        Name    string `db:"name"`
-
-      }
-
-     var listData []Temp
-
-     err := ret.ToStruct(&listData)             //将全部结果存储到结构体中,使用db:"mysql_field_name"的形式进行数据库字段映射
-
-     var data Temp
-
-     err := ret.FirstToStruct(&data)            //将首行存储到一个结构体中
-
- }
-
-
-```
-
-#### Insert
-
-```go
-
- type Temp struct {
-
-        Id      int `db:"id"`
-        Name    string `db:"name"`
-
-   }
-
-   newData := &Temp{
-     Name : "my name"
-   }
-
-
-    ret := client.Insert("table",newData)
-
-    if ret.Err != nil {
-
-    }
-
-```
-
-
-#### Update
-```go
-
- type Temp struct {
-
-        Id      int `db:"id"`
-        Name    string `db:"name"`
-
-   }
-
-   newData := &Temp{
-     Name : "my new name"
-   }
-
-    ret := client.Insert("table",newData,"id=?",1)
-
-    if ret.Err != nil {
-
-    }
-
-```
-
-#### Delete
-```go
-
-    ret := client.Delete("table","id=?",1)
-
-    if ret.Err != nil {
-
-    }
-
-```
 
 ## Usage
----
-#### type Client
 
 ```go
 type Client struct {
+	Sql
 	Host     string
 	Port     uint32
 	User     string
@@ -148,14 +17,14 @@ type Client struct {
 	Config   *ClientDNSConfigure
 }
 ```
-
+客户端
 
 #### func  NewClient
 
 ```go
 func NewClient(protocol string, host string, port uint32, user string, password string, database string) *Client
 ```
-初始化数据库
+初始化数据库 此时并未打开连接池 只有在真实需要与数据库交互的时候才会进行连接.
 
 #### func  NewTcpClient
 
@@ -164,19 +33,19 @@ func NewTcpClient(host string, port uint32, user string, password string, databa
 ```
 初始化一个TCP客户端
 
+#### func (*Client) Begin
+
+```go
+func (this *Client) Begin() (*Transaction, error)
+```
+开启事务
+
 #### func (*Client) Close
 
 ```go
 func (this *Client) Close() error
 ```
 关闭数据库
-
-#### func (*Client) Delete
-
-```go
-func (this *Client) Delete(table string, whereFmt string, whereValue ...interface{}) *ClientExecResult
-```
-根据Where条件删除数据
 
 #### func (*Client) Exec
 
@@ -185,27 +54,6 @@ func (this *Client) Exec(sqlFmt string, sqlValue ...interface{}) *ClientExecResu
 ```
 UPDATE `Table` SET `field_1` = Value Where id = 1 UPDATE SET `field_1` = ? WHERE
 id = ? ,Value,1 支持完整的SQL语句与?占位符.对于?占位符的使用请参考官方文档 ?占位符是字符串安全的,请尽量使用?占位符
-
-#### func (*Client) Insert
-
-```go
-func (this *Client) Insert(table string, v interface{}) *ClientExecResult
-```
-仅支持struct类型数据.需要通过 db tag来进行数据库字段映射
-
-#### func (*Client) InsertOrUpdate
-
-```go
-func (this *Client) InsertOrUpdate(table string, v interface{}) *ClientExecResult
-```
-插入或更新行(当主键已存在的时候) SQL语句为: INSERT INTO .... ON DUPLICATE KEY UPDATE .... 全部字段更新
-
-#### func (*Client) InsertOrUpdateFields
-
-```go
-func (this *Client) InsertOrUpdateFields(table string, v interface{}, updateFields ...string) *ClientExecResult
-```
-插入或更新行(当主键已存在的时候) SQL语句为: INSERT INTO .... ON DUPLICATE KEY UPDATE ....
 
 #### func (*Client) Ping
 
@@ -221,21 +69,6 @@ func (this *Client) Query(sqlFmt string, sqlValue ...interface{}) *ClientQueryRe
 ```
 SELECT * FROM Table WHERE id = 1 SELECT * FROM Table WHERE id = ?
 支持完整的SQL语句与?占位符.对于?占位符的使用请参考官方文档 ?占位符是字符串安全的,请尽量使用?占位符
-
-#### func (*Client) Update
-
-```go
-func (this *Client) Update(table string, v interface{}, whereFmt string, whereValue ...interface{}) *ClientExecResult
-```
-仅支持struct类型数据.需要通过 db tag来进行数据库字段映射 where 条件写法 id = ?
-
-#### func (*Client) UpdateFields
-
-```go
-func (this *Client) UpdateFields(table string, v interface{}, fields []string, whereFmt string, whereValue ...interface{}) *ClientExecResult
-```
-部分字段更新 该接口的意义是struct类型为完整的数据库字段映射.但某些时候我们仅仅需要更新部分字段.此时,如果使用完整映射的进行更新操作 则更容易误覆盖.
-因此提供了这个接口进行部分字段更新. fields 就是需要更新的数据库字段名称 v,whereFmt,WhereValue 等值意义不变
 
 #### type ClientDNSConfigure
 
@@ -355,3 +188,138 @@ float64
 string
 
 []byte
+
+
+
+#### type Sql
+
+```go
+type Sql struct{}
+```
+
+Sql操作集
+
+#### func (*Sql) BatchInsert
+
+```go
+func (this *Sql) BatchInsert(table string, vs interface{}) *ClientExecResult
+```
+批量插入 SQL语句为: REPLACE INTO `%s` (field,field) VALUES (?,?),(?,?) 我们为什么使用REPLACE
+INTO 来支持批量插入. 使用Insert Into 的问题是全部待插入的数据行是事务一致的.因此,对于一次插入中,只要有行已经存在,则全部插入失败.
+
+#### func (*Sql) Delete
+
+```go
+func (this *Sql) Delete(table string, whereFmt string, whereValue ...interface{}) *ClientExecResult
+```
+根据Where条件删除数据
+
+#### func (*Sql) Exec
+
+```go
+func (this *Sql) Exec(sqlFmt string, sqlValue ...interface{}) *ClientExecResult
+```
+not implement anythings
+
+#### func (*Sql) Insert
+
+```go
+func (this *Sql) Insert(table string, v interface{}) *ClientExecResult
+```
+对Struct类型的支持,使用 db tag 进行数据库字段映射 对Map类型会将value转换为string.请确保map类型中只包含基本数据类型
+
+#### func (*Sql) InsertOrUpdate
+
+```go
+func (this *Sql) InsertOrUpdate(table string, v interface{}) *ClientExecResult
+```
+插入或更新行(当主键已存在的时候) SQL语句为: INSERT INTO .... ON DUPLICATE KEY UPDATE .... 全部字段更新
+
+#### func (*Sql) InsertOrUpdateFields
+
+```go
+func (this *Sql) InsertOrUpdateFields(table string, v interface{}, updateFields ...string) *ClientExecResult
+```
+map类型无必要使用该方法 插入或更新行(当主键已存在的时候) SQL语句为: INSERT INTO .... ON DUPLICATE KEY UPDATE
+.... 可以指定更新字段
+
+#### func (*Sql) Query
+
+```go
+func (this *Sql) Query(sqlFmt string, sqlValue ...interface{}) *ClientQueryResult
+```
+not implement anythings
+
+#### func (*Sql) Update
+
+```go
+func (this *Sql) Update(table string, v interface{}, whereFmt string, whereValue ...interface{}) *ClientExecResult
+```
+对Struct类型的支持,使用 db tag 进行数据库字段映射 对Map类型会将value转换为string.请确保map类型中只包含基本数据类型 where
+条件写法 id = ?
+
+#### func (*Sql) UpdateFields
+
+```go
+func (this *Sql) UpdateFields(table string, v interface{}, fields []string, whereFmt string, whereValue ...interface{}) *ClientExecResult
+```
+map类型无必要使用该方法 部分字段更新
+该接口的意义是struct类型为完整的数据库字段映射.但某些时候我们仅仅需要更新部分字段.此时,如果使用完整映射的进行更新操作 则更容易误覆盖.
+因此提供了这个接口进行部分字段更新. fields 就是需要更新的数据库字段名称 v,whereFmt,WhereValue 等值意义不变
+
+
+#### type Transaction
+
+```go
+type Transaction struct {
+	Sql
+}
+```
+
+事务客户端
+
+#### func (*Transaction) Commit
+
+```go
+func (this *Transaction) Commit() error
+```
+提交事务
+
+#### func (*Transaction) Exec
+
+```go
+func (this *Transaction) Exec(sqlFmt string, sqlValue ...interface{}) *ClientExecResult
+```
+UPDATE `Table` SET `field_1` = Value Where id = 1 UPDATE SET `field_1` = ? WHERE
+id = ? ,Value,1 支持完整的SQL语句与?占位符.对于?占位符的使用请参考官方文档 ?占位符是字符串安全的,请尽量使用?占位符
+
+#### func (*Transaction) Query
+
+```go
+func (this *Transaction) Query(sqlFmt string, sqlValue ...interface{}) *ClientQueryResult
+```
+SELECT * FROM Table WHERE id = 1 SELECT * FROM Table WHERE id = ?
+支持完整的SQL语句与?占位符.对于?占位符的使用请参考官方文档 ?占位符是字符串安全的,请尽量使用?占位符
+
+#### func (*Transaction) Roolback
+
+```go
+func (this *Transaction) Roolback() error
+```
+回滚事务
+
+#### type UnmarshalBinary
+
+```go
+type UnmarshalBinary interface {
+	UnmarshalDB(data []byte) error
+}
+```
+
+#### type MarshalBinary
+
+```go
+type MarshalBinary interface {
+	MarshalDB() ([]byte, error)
+}
+```
