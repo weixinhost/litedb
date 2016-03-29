@@ -24,6 +24,13 @@ type Client struct {
 	Protocol 	string
 	Config 		*ClientDNSConfigure
 	db 			*sql.DB
+	autoExec 	bool
+}
+
+
+type Transaction struct {
+	tx *sql.Tx
+	db *sql.DB
 }
 
 // =======================================================================================================
@@ -42,6 +49,7 @@ func NewClient(protocol string,host string,port uint32,user string,password stri
 	client.Database	= database
 	client.Protocol = protocol
 	client.Config 	= NewClientDnsConfigure()
+
 	return client
 }
 
@@ -49,7 +57,6 @@ func NewClient(protocol string,host string,port uint32,user string,password stri
 func NewTcpClient(host string,port uint32,user string,password string,database string) *Client{
 	return NewClient("tcp",host,port,user,password,database)
 }
-
 
 // =======================================================================================================
 // -------------------------------------------- Public Api -----------------------------------------------
@@ -219,7 +226,7 @@ func (this *Client)UpdateFields(table string,v interface{},fields []string,where
 // 根据Where条件删除数据
 func (this *Client)Delete(table string,whereFmt string,whereValue...interface{})(*ClientExecResult) {
 	sql := fmt.Sprintf("DELETE FROM `%s` WHERE %s",table,whereFmt)
-	return this.Exec(sql,whereValue)
+	return this.Exec(sql,whereValue...)
 }
 
 
@@ -335,41 +342,54 @@ func (this *Client)InsertOrUpdateFields(table string,v interface{},updateFields.
 
 	return this.Exec(sql,insertValList...)
 
-
 }
 
-/*
-func (this *Client)Begin() error{
-	tx,err := this.db.Begin()
+func (this *Client)BatchInsert(table string,vs interface{}) (*ClientExecResult) {
+
+	r := new(ClientExecResult)
+
+	list,err := ListStructToMap(vs)
+
 	if err != nil {
-		return errors.New("[LiteDB Begin] " + err.Error())
+		r.Err = errors.New("[LiteDB BatchInsert] " + err.Error())
+		return r
 	}
-	this.tx = tx
-	return nil
+	valList := make([]interface{},0)
+	sql := fmt.Sprintf("REPLACE INTO `%s` ",table)
+
+	smap := list[0]
+	keys := bytes.NewBufferString("")
+
+	keysIndex := []string{}
+
+	for k,_ := range smap {
+		keysIndex = append(keysIndex,k)
+		keys.WriteString(fmt.Sprintf("`%s`,",k))
+	}
+	keysSplit := string(keys.Bytes()[0:keys.Len() - 1])
+
+	sql += fmt.Sprintf("(%s) VALUES ",keysSplit)
+
+	for _,smap := range list {
+		vals  := bytes.NewBufferString("")
+
+		for i:=0 ;i<len(keysIndex);i++ {
+			k := keysIndex[i]
+			v := smap[k]
+			vals.WriteString("?,")
+			valList = append(valList,v)
+		}
+
+		valsSplit := string(vals.Bytes()[0:vals.Len() -1])
+		sql += fmt.Sprintf("(%s),",valsSplit)
+	}
+
+	sql = string([]byte(sql)[0:len(sql) -1])
+
+	return this.Exec(sql,valList...)
+
 }
 
-func (this *Client)Commit() error{
-
-	if this.tx == nil {
-		return errors.New("[LiteDB Commit] Transaction Not Begin.")
-	}
-
-	err := this.tx.Commit()
-	this.tx = nil
-	return err
-}
-
-func (this *Client)Rollback() error{
-
-	if this.tx == nil {
-		return errors.New("[LiteDB Commit] Transaction Not Begin.")
-	}
-
-	err := this.tx.Rollback()
-	this.tx = nil
-	return err
-}
-*/
 
 //关闭数据库
 func (this *Client)Close() error{
@@ -388,6 +408,47 @@ func (this *Client)Ping() error{
 	}
 	return this.db.Ping()
 }
+
+
+
+func (this *Client)Begin()(*Transaction,error){
+
+	tx,err := this.db.Begin()
+
+	if err != nil {
+		return nil,err
+	}
+
+	tran := new(Transaction)
+	tran.tx = tx
+	tran.db = this.db
+	return tran,nil
+}
+
+func (this *Transaction)Commit() error {
+
+	return this.tx.Commit()
+}
+
+func (this *Transaction)Roolback() error {
+
+	return this.tx.Rollback()
+}
+
+func (this *Transaction)Exec(sqlFmt string,vals ...interface{}) *ClientExecResult {
+
+	result := new(ClientExecResult)
+	var ret sql.Result
+	var err error
+	ret,err = this.tx.Exec(sqlFmt,vals...)
+	result.Result =ret
+	result.Err = err
+	return result
+}
+
+
+
+
 
 // =======================================================================================================
 // -------------------------------------------- Private Api ----------------------------------------------

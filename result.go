@@ -189,8 +189,6 @@ func mapToReflect(mapV map[string]string,t reflect.Type,p reflect.Value) error{
 		return errors.New("[LiteDB FirstToStruct] struct is non-struct.")
 	}
 
-
-
 	if  t.NumField() < 1{
 
 		return errors.New("[LiteDB FirstToStruct] store struct is empty.")
@@ -316,21 +314,31 @@ func mapToReflect(mapV map[string]string,t reflect.Type,p reflect.Value) error{
 
 func StructToMap(structV interface{}) (map[string]string,error){
 
-	t := reflect.TypeOf(structV).Elem()
+	t := reflect.TypeOf(structV)
+	p := reflect.ValueOf(structV)
 
-	p := reflect.ValueOf(structV).Elem()
+	if p.Kind() == reflect.Ptr {
 
-	if reflect.ValueOf(structV).IsNil() {
-		return nil,errors.New("[LiteDB structToMap] store struct is nil")
+		if reflect.ValueOf(structV).IsNil() {
+			return nil,errors.New("[LiteDB structToMap] store struct is nil")
+		}
+
+		t = t.Elem()
+		p = p.Elem()
 	}
 
+	return reflectToMap(t,p)
+}
+
+func reflectToMap(t reflect.Type,p reflect.Value)(map[string]string,error){
+
 	if p.Kind() != reflect.Struct {
-		return nil,errors.New("[LiteDB structToMap] struct is non-struct.")
+		return nil,errors.New("[LiteDB reflectToMap] struct is non-struct.")
 	}
 
 	if  t.NumField() < 1{
 
-		return nil,errors.New("[LiteDB structToMap] store struct is empty.")
+		return nil,errors.New("[LiteDB reflectToMap] store struct is empty.")
 	}
 
 	ret := make(map[string]string,0)
@@ -350,6 +358,44 @@ func StructToMap(structV interface{}) (map[string]string,error){
 		str := ToStr(fv.Interface())
 
 		ret[tag] = str
+	}
+
+	return ret,nil
+
+}
+
+func ListStructToMap(vs interface{})([]map[string]string,error){
+
+	ret := make([]map[string]string,0)
+
+	t := reflect.TypeOf(vs)
+	p := reflect.ValueOf(vs)
+
+	if p.Kind() == reflect.Ptr {
+		t = t.Elem()
+		p = p.Elem()
+	}
+
+	kind := p.Kind()
+
+	if kind != reflect.Array && kind != reflect.Slice {
+		return ret,errors.New("[LiteDB ListStructToMap] interface{} is non-array or non-slice.")
+	}
+
+	len := p.Len()
+
+	if len < 1 {
+		return ret,errors.New("[LiteDB ListStructToMap] interface{} is empty.")
+	}
+
+	for i:=0; i<len; i++ {
+		v := p.Index(i)
+
+		rv,re := reflectToMap(v.Type(),v)
+		if re != nil {
+			return ret,errors.New("[LiteDB ListStructToMap] error:" + re.Error())
+		}
+		ret = append(ret,rv)
 	}
 
 	return ret,nil
