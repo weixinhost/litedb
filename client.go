@@ -12,11 +12,15 @@ import (
 	"fmt"
 	"errors"
 	"bytes"
+	"github.com/astaxie/beego"
 )
 
 
 //Sql操作集
-type Sql struct {}
+type Sql struct {
+	Exec 	func(sqlFmt string,sqlValue...interface{}) (*ClientExecResult)
+	Query   func(sqlFmt string,sqlValue...interface{}) (*ClientQueryResult)
+}
 
 
 //客户端
@@ -98,14 +102,13 @@ func (this *Sql)Update(table string,v interface{},whereFmt string,whereValue...i
 	valList := make([]interface{},0)
 
 	for k,v := range smap {
-		set.WriteString(fmt.Sprintf("`%s`=?, ",k))
+		set.WriteString(fmt.Sprintf("`%s`=?,",k))
 		valList = append(valList,v)
 	}
-
 	setSplit := string(set.Bytes()[0:set.Len() - 1])
-
 	sql := fmt.Sprintf("UPDATE `%s` SET %s WHERE %s",table,setSplit,whereFmt)
-	valList = append(valList,whereValue)
+	valList = append(valList,whereValue...)
+	beego.Debug(sql,valList)
 	return this.Exec(sql,valList...)
 
 }
@@ -333,21 +336,6 @@ func (this *Sql)BatchInsert(table string,vs interface{}) (*ClientExecResult) {
 }
 
 
-
-//not implement anythings
-func (this *Sql)Exec(sqlFmt string,sqlValue...interface{}) (*ClientExecResult) {
-
-	return nil
-}
-
-//not implement anythings
-func (this *Sql)Query(sqlFmt string,sqlValue...interface{}) (*ClientQueryResult){
-
-	return nil
-
-}
-
-
 // =======================================================================================================
 // -------------------------------------------- Constructor ----------------------------------------------
 // =======================================================================================================
@@ -367,6 +355,9 @@ func NewClient(protocol string,host string,port uint32,user string,password stri
 	client.Protocol = protocol
 	client.Config 	= NewClientDnsConfigure()
 
+	client.Exec = client.exec
+	client.Query =client.query
+
 	return client
 }
 
@@ -385,7 +376,7 @@ func NewTcpClient(host string,port uint32,user string,password string,database s
 // UPDATE SET `field_1` = ? WHERE id = ? ,Value,1
 // 支持完整的SQL语句与?占位符.对于?占位符的使用请参考官方文档
 // ?占位符是字符串安全的,请尽量使用?占位符
-func (this *Client)Exec(sqlFmt string,sqlValue...interface{}) (*ClientExecResult) {
+func (this *Client)exec(sqlFmt string,sqlValue...interface{}) (*ClientExecResult) {
 
 	result := new(ClientExecResult)
 
@@ -408,7 +399,7 @@ func (this *Client)Exec(sqlFmt string,sqlValue...interface{}) (*ClientExecResult
 // SELECT * FROM Table WHERE id = ?
 // 支持完整的SQL语句与?占位符.对于?占位符的使用请参考官方文档
 // ?占位符是字符串安全的,请尽量使用?占位符
-func (this *Client)Query(sqlFmt string,sqlValue...interface{}) (*ClientQueryResult){
+func (this *Client)query(sqlFmt string,sqlValue...interface{}) (*ClientQueryResult){
 
 	result := new(ClientQueryResult)
 
@@ -456,6 +447,8 @@ func (this *Client)Begin()(*Transaction,error){
 	tran := new(Transaction)
 	tran.tx = tx
 	tran.db = this.db
+	tran.Exec = tran.exec
+	tran.Query = tran.query
 	return tran,nil
 }
 
@@ -465,15 +458,15 @@ func (this *Client)Begin()(*Transaction,error){
 // UPDATE SET `field_1` = ? WHERE id = ? ,Value,1
 // 支持完整的SQL语句与?占位符.对于?占位符的使用请参考官方文档
 // ?占位符是字符串安全的,请尽量使用?占位符
-func (this *Transaction)Exec(sqlFmt string,sqlValue...interface{}) (*ClientExecResult) {
+func (this *Transaction)exec(sqlFmt string,sqlValue...interface{}) (*ClientExecResult) {
 
 	result := new(ClientExecResult)
 	var ret sql.Result
 	var err error
 
 	ret,err = this.tx.Exec(sqlFmt,sqlValue...)
-	result.Result =ret
-	result.Err = err
+	result.Result = ret
+	result.Err 	  = err
 	return result
 }
 
@@ -481,7 +474,7 @@ func (this *Transaction)Exec(sqlFmt string,sqlValue...interface{}) (*ClientExecR
 // SELECT * FROM Table WHERE id = ?
 // 支持完整的SQL语句与?占位符.对于?占位符的使用请参考官方文档
 // ?占位符是字符串安全的,请尽量使用?占位符
-func (this *Transaction)Query(sqlFmt string,sqlValue...interface{}) (*ClientQueryResult){
+func (this *Transaction)query(sqlFmt string,sqlValue...interface{}) (*ClientQueryResult){
 
 	result := new(ClientQueryResult)
 
