@@ -79,6 +79,12 @@ func TestError(t *testing.T) {
 
 
 
+func TestNil(t *testing.T) {
+
+	t.Error(ParseWhereMap(nil))
+}
+
+
 
 
 

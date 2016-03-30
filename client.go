@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"errors"
 	"bytes"
+	"github.com/go-sql-driver/mysql"
 )
 
 
@@ -387,10 +388,21 @@ func (this *Client)exec(sqlFmt string,sqlValue...interface{}) (*ClientExecResult
 	ret,err = this.db.Exec(sqlFmt,sqlValue...)
 	result.Result =ret
 
-	if err != nil && len(err.Error()) == 0 {
-		result.Err = errors.New("Unknow Error:empty error msg.")
-	}else{
+	if _,isWarning := err.(mysql.MySQLWarnings);isWarning {
+		result.Warn = err
+	}
+
+
+	if result.Warn == nil {
 		result.Err = err
+	}
+
+	if result.Err != nil && len(result.Err.Error()) == 0 {
+		result.Err = errors.New("Unknow Error:empty error msg.")
+	}
+
+	if result.Warn != nil && len(result.Warn.Error()) == 0 {
+		result.Warn = errors.New("Unknow Warning:empty warning msg.")
 	}
 
 	return result
@@ -411,7 +423,22 @@ func (this *Client)query(sqlFmt string,sqlValue...interface{}) (*ClientQueryResu
 
 	rows,err := this.db.Query(sqlFmt,sqlValue...)
 	result.Rows = rows
-	result.Err = err
+
+	if _,isWarning := err.(mysql.MySQLWarnings);isWarning {
+		result.Warn = err
+	}
+
+	if result.Warn == nil {
+		result.Err = err
+	}
+
+	if result.Err != nil && len(result.Err.Error()) == 0 {
+		result.Err = errors.New("Unknow Error:empty error msg.")
+	}
+
+	if result.Warn != nil && len(result.Warn.Error()) == 0 {
+		result.Warn = errors.New("Unknow Warning:empty warning msg.")
+	}
 
 	return result
 

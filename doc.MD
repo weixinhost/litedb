@@ -1,6 +1,6 @@
 # litedb
 --
-    import "litedb"
+    import "github.com/weixinhost/litedb"
 
 
 ## Usage
@@ -124,7 +124,8 @@ func (this *ClientDNSConfigure) Set(k, v string) bool
 ```go
 type ClientExecResult struct {
 	Result sql.Result
-	Err    error
+	Err    error //db error
+	Warn   error // db warning
 }
 ```
 
@@ -135,7 +136,8 @@ Client.Exec 的结果
 ```go
 type ClientQueryResult struct {
 	Rows *sql.Rows
-	Err  error
+	Err  error // db error
+	Warn error // db warning
 }
 ```
 
