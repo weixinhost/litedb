@@ -12,7 +12,7 @@ import (
 	"fmt"
 	"errors"
 	"bytes"
-	"github.com/astaxie/beego"
+
 )
 
 
@@ -108,7 +108,6 @@ func (this *Sql)Update(table string,v interface{},whereFmt string,whereValue...i
 	setSplit := string(set.Bytes()[0:set.Len() - 1])
 	sql := fmt.Sprintf("UPDATE `%s` SET %s WHERE %s",table,setSplit,whereFmt)
 	valList = append(valList,whereValue...)
-	beego.Debug(sql,valList)
 	return this.Exec(sql,valList...)
 
 }

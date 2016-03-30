@@ -6,8 +6,6 @@ import (
 	"reflect"
 )
 
-
-
 // Client.Exec 的结果
 type ClientExecResult struct {
 
@@ -22,10 +20,13 @@ type ClientQueryResult struct {
 }
 
 
+//支持struct中的字段拥有更复杂的类型.
+//需要实现该接口才能正确的打包成string插入数据库中
 type MarshalBinary interface{
 	MarshalDB() ([]byte,error)
 }
 
+//对 MarshalBinary 的反向操作
 type UnmarshalBinary interface{
 	UnmarshalDB(data []byte) (error)
 }
@@ -309,7 +310,35 @@ func mapToReflect(mapV map[string]string,t reflect.Type,p reflect.Value) error{
 			}
 
 			default : {
-				de = errors.New("[LiteDB mapToStruct] Unsupprted Type:" + filev.String())
+
+				m := fv.MethodByName("UnmarshalDB")
+
+				if m.IsValid() && len(s.String()) > 0{
+					var setEle reflect.Value
+					if fv.Type().Kind() == reflect.Ptr {
+						setEle = reflect.New(fv.Type().Elem())
+					}else{
+						setEle = reflect.New(fv.Type())
+					}
+
+					nm := setEle.MethodByName("UnmarshalDB")
+
+					vals := nm.Call([]reflect.Value{
+						reflect.ValueOf([]byte(s.String())),
+					})
+
+					if len(vals) > 0 {
+						errVal 	 := vals[0]
+						if !errVal.IsNil(){
+							de = errors.New("[LiteDB mapToStruct] marshal error: " + errVal.Interface().(error).Error())
+						}else{
+							fv.Set(setEle)
+						}
+					}
+
+				}else{
+					de = errors.New("[LiteDB mapToStruct] Unsupprted Type:" + filev.String())
+				}
 			}
 			}
 
@@ -377,9 +406,31 @@ func reflectToMap(t reflect.Type,p reflect.Value)(map[string]string,error){
 
 		fv := p.FieldByName(field.Name)
 
-		str := ToStr(fv.Interface())
+		var storStr string = ""
 
-		ret[tag] = str
+		if fv.Type().Kind() == reflect.Ptr && fv.IsNil() {
+			//skip nil pointer
+		}else{
+
+			m := fv.MethodByName("MarshalDB")
+			if m.IsValid() {
+				vals := m.Call([]reflect.Value{})
+				if len(vals) > 0 {
+					dataVal  := vals[0]
+					errVal 	 := vals[1]
+					if errVal.IsNil() && dataVal.CanInterface(){
+						data := dataVal.Interface().([]byte)
+						storStr = string(data)
+					}else{
+						return nil,errors.New("MarshalDB error: " + errVal.Interface().(error).Error())
+					}
+				}
+			}else{
+				storStr = ToStr(fv.Interface())
+			}
+		}
+
+		ret[tag] = storStr
 	}
 
 	return ret,nil

@@ -5,6 +5,34 @@
 
 ## Usage
 
+#### func  ListStructToMap
+
+```go
+func ListStructToMap(vs interface{}) ([]map[string]string, error)
+```
+
+#### func  StructToMap
+
+```go
+func StructToMap(structV interface{}) (map[string]string, error)
+```
+
+#### func  ToInt64
+
+```go
+func ToInt64(value interface{}) (d int64)
+```
+ToInt64 interface to int64
+
+#### func  ToStr
+
+```go
+func ToStr(value interface{}, args ...int) (s string)
+```
+ToStr interface to string
+
+#### type Client
+
 ```go
 type Client struct {
 	Sql
@@ -17,6 +45,7 @@ type Client struct {
 	Config   *ClientDNSConfigure
 }
 ```
+
 客户端
 
 #### func  NewClient
@@ -47,28 +76,12 @@ func (this *Client) Close() error
 ```
 关闭数据库
 
-#### func (*Client) Exec
-
-```go
-func (this *Client) Exec(sqlFmt string, sqlValue ...interface{}) *ClientExecResult
-```
-UPDATE `Table` SET `field_1` = Value Where id = 1 UPDATE SET `field_1` = ? WHERE
-id = ? ,Value,1 支持完整的SQL语句与?占位符.对于?占位符的使用请参考官方文档 ?占位符是字符串安全的,请尽量使用?占位符
-
 #### func (*Client) Ping
 
 ```go
 func (this *Client) Ping() error
 ```
 ping
-
-#### func (*Client) Query
-
-```go
-func (this *Client) Query(sqlFmt string, sqlValue ...interface{}) *ClientQueryResult
-```
-SELECT * FROM Table WHERE id = 1 SELECT * FROM Table WHERE id = ?
-支持完整的SQL语句与?占位符.对于?占位符的使用请参考官方文档 ?占位符是字符串安全的,请尽量使用?占位符
 
 #### type ClientDNSConfigure
 
@@ -189,12 +202,23 @@ string
 
 []byte
 
+#### type MarshalBinary
 
+```go
+type MarshalBinary interface {
+	MarshalDB() ([]byte, error)
+}
+```
+
+支持struct中的字段拥有更复杂的类型. 需要实现该接口才能正确的打包成string插入数据库中
 
 #### type Sql
 
 ```go
-type Sql struct{}
+type Sql struct {
+	Exec  func(sqlFmt string, sqlValue ...interface{}) *ClientExecResult
+	Query func(sqlFmt string, sqlValue ...interface{}) *ClientQueryResult
+}
 ```
 
 Sql操作集
@@ -213,13 +237,6 @@ INTO 来支持批量插入. 使用Insert Into 的问题是全部待插入的数�
 func (this *Sql) Delete(table string, whereFmt string, whereValue ...interface{}) *ClientExecResult
 ```
 根据Where条件删除数据
-
-#### func (*Sql) Exec
-
-```go
-func (this *Sql) Exec(sqlFmt string, sqlValue ...interface{}) *ClientExecResult
-```
-not implement anythings
 
 #### func (*Sql) Insert
 
@@ -243,13 +260,6 @@ func (this *Sql) InsertOrUpdateFields(table string, v interface{}, updateFields 
 map类型无必要使用该方法 插入或更新行(当主键已存在的时候) SQL语句为: INSERT INTO .... ON DUPLICATE KEY UPDATE
 .... 可以指定更新字段
 
-#### func (*Sql) Query
-
-```go
-func (this *Sql) Query(sqlFmt string, sqlValue ...interface{}) *ClientQueryResult
-```
-not implement anythings
-
 #### func (*Sql) Update
 
 ```go
@@ -267,6 +277,132 @@ map类型无必要使用该方法 部分字段更新
 该接口的意义是struct类型为完整的数据库字段映射.但某些时候我们仅仅需要更新部分字段.此时,如果使用完整映射的进行更新操作 则更容易误覆盖.
 因此提供了这个接口进行部分字段更新. fields 就是需要更新的数据库字段名称 v,whereFmt,WhereValue 等值意义不变
 
+#### type StrTo
+
+```go
+type StrTo string
+```
+
+StrTo is the target string
+
+#### func (StrTo) Bool
+
+```go
+func (f StrTo) Bool() (bool, error)
+```
+Bool string to bool
+
+#### func (*StrTo) Clear
+
+```go
+func (f *StrTo) Clear()
+```
+Clear string
+
+#### func (StrTo) Exist
+
+```go
+func (f StrTo) Exist() bool
+```
+Exist check string exist
+
+#### func (StrTo) Float32
+
+```go
+func (f StrTo) Float32() (float32, error)
+```
+Float32 string to float32
+
+#### func (StrTo) Float64
+
+```go
+func (f StrTo) Float64() (float64, error)
+```
+Float64 string to float64
+
+#### func (StrTo) Int
+
+```go
+func (f StrTo) Int() (int, error)
+```
+Int string to int
+
+#### func (StrTo) Int16
+
+```go
+func (f StrTo) Int16() (int16, error)
+```
+Int16 string to int16
+
+#### func (StrTo) Int32
+
+```go
+func (f StrTo) Int32() (int32, error)
+```
+Int32 string to int32
+
+#### func (StrTo) Int64
+
+```go
+func (f StrTo) Int64() (int64, error)
+```
+Int64 string to int64
+
+#### func (StrTo) Int8
+
+```go
+func (f StrTo) Int8() (int8, error)
+```
+Int8 string to int8
+
+#### func (*StrTo) Set
+
+```go
+func (f *StrTo) Set(v string)
+```
+Set string
+
+#### func (StrTo) String
+
+```go
+func (f StrTo) String() string
+```
+String string to string
+
+#### func (StrTo) Uint
+
+```go
+func (f StrTo) Uint() (uint, error)
+```
+Uint string to uint
+
+#### func (StrTo) Uint16
+
+```go
+func (f StrTo) Uint16() (uint16, error)
+```
+Uint16 string to uint16
+
+#### func (StrTo) Uint32
+
+```go
+func (f StrTo) Uint32() (uint32, error)
+```
+Uint32 string to uint31
+
+#### func (StrTo) Uint64
+
+```go
+func (f StrTo) Uint64() (uint64, error)
+```
+Uint64 string to uint64
+
+#### func (StrTo) Uint8
+
+```go
+func (f StrTo) Uint8() (uint8, error)
+```
+Uint8 string to uint8
 
 #### type Transaction
 
@@ -285,22 +421,6 @@ func (this *Transaction) Commit() error
 ```
 提交事务
 
-#### func (*Transaction) Exec
-
-```go
-func (this *Transaction) Exec(sqlFmt string, sqlValue ...interface{}) *ClientExecResult
-```
-UPDATE `Table` SET `field_1` = Value Where id = 1 UPDATE SET `field_1` = ? WHERE
-id = ? ,Value,1 支持完整的SQL语句与?占位符.对于?占位符的使用请参考官方文档 ?占位符是字符串安全的,请尽量使用?占位符
-
-#### func (*Transaction) Query
-
-```go
-func (this *Transaction) Query(sqlFmt string, sqlValue ...interface{}) *ClientQueryResult
-```
-SELECT * FROM Table WHERE id = 1 SELECT * FROM Table WHERE id = ?
-支持完整的SQL语句与?占位符.对于?占位符的使用请参考官方文档 ?占位符是字符串安全的,请尽量使用?占位符
-
 #### func (*Transaction) Roolback
 
 ```go
@@ -316,10 +436,4 @@ type UnmarshalBinary interface {
 }
 ```
 
-#### type MarshalBinary
-
-```go
-type MarshalBinary interface {
-	MarshalDB() ([]byte, error)
-}
-```
+对 MarshalBinary 的反向操作
