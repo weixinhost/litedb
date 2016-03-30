@@ -12,7 +12,6 @@ import (
 	"fmt"
 	"errors"
 	"bytes"
-
 )
 
 
@@ -60,7 +59,6 @@ func (this *Sql)Insert(table string,v interface{})(*ClientExecResult) {
 	if len(smap) < 1 {
 		r.Err = errors.New("[LiteDB Insert] Nothing Insert")
 		return r
-
 	}
 
 	keys := bytes.NewBufferString("")
@@ -166,7 +164,6 @@ func (this *Sql)Delete(table string,whereFmt string,whereValue...interface{})(*C
 	sql := fmt.Sprintf("DELETE FROM `%s` WHERE %s",table,whereFmt)
 	return this.Exec(sql,whereValue...)
 }
-
 
 // 插入或更新行(当主键已存在的时候)
 // SQL语句为: INSERT INTO .... ON DUPLICATE KEY UPDATE ....
@@ -388,9 +385,14 @@ func (this *Client)exec(sqlFmt string,sqlValue...interface{}) (*ClientExecResult
 	var err error
 
 	ret,err = this.db.Exec(sqlFmt,sqlValue...)
-
 	result.Result =ret
-	result.Err = err
+
+	if err != nil && len(err.Error()) == 0 {
+		result.Err = errors.New("Unknow Error:empty error msg.")
+	}else{
+		result.Err = err
+	}
+
 	return result
 }
 

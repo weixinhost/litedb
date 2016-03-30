@@ -13,3 +13,11 @@
 #### Document
 
 [http://weixinhost.github.io/litedb/](http://weixinhost.github.io/litedb/)
+
+
+#### Configure
+
+Client.Config.Set 请参考[https://github.com/go-sql-driver/mysql](https://github.com/go-sql-driver/mysql)
+
+
+
