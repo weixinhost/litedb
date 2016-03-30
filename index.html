@@ -24,13 +24,11 @@
 
 <h2></h2>
 
-<pre><code>import "litedb"
+<pre><code>import "github.com/weixinhost/litedb"
 </code></pre>
 
-<p>一个轻便以及追求SQL性能的MYSQL客户端</p>
-
-<h4>
-<a id="intro" class="anchor" href="#intro" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Intro</h4>
+<h3>
+<a id="intro" class="anchor" href="#intro" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Intro</h3>
 
 <pre><code>LiteDB 的核心设计目标是提供一个轻量级的SQL封装.
 LiteDB 不会对设计范式与Mysql本身做更多的侵入
@@ -39,31 +37,34 @@ LiteDB 不提供任何形式的SQLBuilder
 LiteDB 使用 `database/sql` 和 mysql驱动
 </code></pre>
 
-<h4>
-<a id="init" class="anchor" href="#init" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Init</h4>
+<h3>
+<a id="init" class="anchor" href="#init" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Init</h3>
 
-<div class="highlight highlight-source-go"><pre>
-    <span class="pl-smi">host</span>        <span class="pl-k">:=</span> <span class="pl-s"><span class="pl-pds">"</span>127.0.0.1<span class="pl-pds">"</span></span>
+<div class="highlight highlight-source-go"><pre>    <span class="pl-smi">host</span>        <span class="pl-k">:=</span> <span class="pl-s"><span class="pl-pds">"</span>127.0.0.1<span class="pl-pds">"</span></span>
     <span class="pl-smi">port</span>        <span class="pl-k">:=</span> <span class="pl-c1">3306</span>
     <span class="pl-smi">user</span>        <span class="pl-k">:=</span> <span class="pl-s"><span class="pl-pds">"</span>root<span class="pl-pds">"</span></span>
     <span class="pl-smi">password</span>    <span class="pl-k">:=</span> <span class="pl-s"><span class="pl-pds">"</span>root<span class="pl-pds">"</span></span>
     <span class="pl-smi">database</span>    <span class="pl-k">:=</span> <span class="pl-s"><span class="pl-pds">"</span>database_name<span class="pl-pds">"</span></span>
 
    <span class="pl-smi">client</span> <span class="pl-k">:=</span> litedb.<span class="pl-c1">NewTcpClient</span>(host,port,user,password,database)
+
 </pre></div>
 
-<h4>
-<a id="configure" class="anchor" href="#configure" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Configure</h4>
+<h3>
+<a id="configure" class="anchor" href="#configure" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Configure</h3>
+
+<p>请参考<a href="https://github.com/go-sql-driver/mysql">https://github.com/go-sql-driver/mysql</a></p>
 
 <div class="highlight highlight-source-go"><pre>
     client.<span class="pl-smi">Config</span>.<span class="pl-c1">Set</span>(<span class="pl-s"><span class="pl-pds">"</span>timeout<span class="pl-pds">"</span></span>,<span class="pl-s"><span class="pl-pds">"</span>5<span class="pl-pds">"</span></span>)
-    client.<span class="pl-smi">Config</span>.<span class="pl-c1">Set</span>(<span class="pl-s"><span class="pl-pds">"</span>charset<span class="pl-pds">"</span></span>,<span class="pl-s"><span class="pl-pds">"</span>utf8<span class="pl-pds">"</span></span>)</pre></div>
+    client.<span class="pl-smi">Config</span>.<span class="pl-c1">Set</span>(<span class="pl-s"><span class="pl-pds">"</span>charset<span class="pl-pds">"</span></span>,<span class="pl-s"><span class="pl-pds">"</span>utf8<span class="pl-pds">"</span></span>)
+</pre></div>
 
-<h4>
-<a id="query" class="anchor" href="#query" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Query</h4>
+<h3>
+<a id="query" class="anchor" href="#query" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Query</h3>
 
 <div class="highlight highlight-source-go"><pre>
- <span class="pl-smi">fullSql</span> <span class="pl-k">:=</span> <span class="pl-s"><span class="pl-pds">"</span>SELECT * FROM `my_table` LIMIT 10<span class="pl-pds">"</span></span>
+<span class="pl-smi">fullSql</span> <span class="pl-k">:=</span> <span class="pl-s"><span class="pl-pds">"</span>SELECT * FROM `my_table` LIMIT 10<span class="pl-pds">"</span></span>
 
  <span class="pl-smi">ret</span> <span class="pl-k">:=</span> client.<span class="pl-c1">Query</span>(fullSql)
 
@@ -96,14 +97,13 @@ LiteDB 使用 `database/sql` 和 mysql驱动
      <span class="pl-smi">err</span> <span class="pl-k">:=</span> ret.<span class="pl-c1">FirstToStruct</span>(&amp;data)            <span class="pl-c">//将首行存储到一个结构体中</span>
 
  }
-
 </pre></div>
 
-<h4>
-<a id="insert" class="anchor" href="#insert" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Insert</h4>
+<h3>
+<a id="insert" class="anchor" href="#insert" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Insert</h3>
 
 <div class="highlight highlight-source-go"><pre>
- <span class="pl-k">type</span> <span class="pl-v">Temp</span> <span class="pl-k">struct</span> {
+<span class="pl-k">type</span> <span class="pl-v">Temp</span> <span class="pl-k">struct</span> {
 
         <span class="pl-v">Id</span>      <span class="pl-k">int</span> <span class="pl-s"><span class="pl-pds">`</span>db:"id"<span class="pl-pds">`</span></span>
         <span class="pl-v">Name</span>    <span class="pl-k">string</span> <span class="pl-s"><span class="pl-pds">`</span>db:"name"<span class="pl-pds">`</span></span>
@@ -122,11 +122,10 @@ LiteDB 使用 `database/sql` 和 mysql驱动
     }
 </pre></div>
 
-<h4>
-<a id="update" class="anchor" href="#update" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Update</h4>
+<h3>
+<a id="update" class="anchor" href="#update" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Update</h3>
 
-<div class="highlight highlight-source-go"><pre>
- <span class="pl-k">type</span> <span class="pl-v">Temp</span> <span class="pl-k">struct</span> {
+<div class="highlight highlight-source-go"><pre><span class="pl-k">type</span> <span class="pl-v">Temp</span> <span class="pl-k">struct</span> {
 
         <span class="pl-v">Id</span>      <span class="pl-k">int</span> <span class="pl-s"><span class="pl-pds">`</span>db:"id"<span class="pl-pds">`</span></span>
         <span class="pl-v">Name</span>    <span class="pl-k">string</span> <span class="pl-s"><span class="pl-pds">`</span>db:"name"<span class="pl-pds">`</span></span>
@@ -137,15 +136,16 @@ LiteDB 使用 `database/sql` 和 mysql驱动
      <span class="pl-v">Name</span> : <span class="pl-s"><span class="pl-pds">"</span>my new name<span class="pl-pds">"</span></span>
    }
 
-    <span class="pl-smi">ret</span> <span class="pl-k">:=</span> client.<span class="pl-c1">Insert</span>(<span class="pl-s"><span class="pl-pds">"</span>table<span class="pl-pds">"</span></span>,newData,<span class="pl-s"><span class="pl-pds">"</span>id=?<span class="pl-pds">"</span></span>,<span class="pl-c1">1</span>)
+    <span class="pl-smi">ret</span> <span class="pl-k">:=</span> client.<span class="pl-c1">Update</span>(<span class="pl-s"><span class="pl-pds">"</span>table<span class="pl-pds">"</span></span>,newData,<span class="pl-s"><span class="pl-pds">"</span>id=?<span class="pl-pds">"</span></span>,<span class="pl-c1">1</span>)
 
     <span class="pl-k">if</span> ret.<span class="pl-smi">Err</span> != <span class="pl-c1">nil</span> {
 
     }
+
 </pre></div>
 
-<h4>
-<a id="delete" class="anchor" href="#delete" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Delete</h4>
+<h3>
+<a id="delete" class="anchor" href="#delete" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Delete</h3>
 
 <div class="highlight highlight-source-go"><pre>
     <span class="pl-smi">ret</span> <span class="pl-k">:=</span> client.<span class="pl-c1">Delete</span>(<span class="pl-s"><span class="pl-pds">"</span>table<span class="pl-pds">"</span></span>,<span class="pl-s"><span class="pl-pds">"</span>id=?<span class="pl-pds">"</span></span>,<span class="pl-c1">1</span>)
@@ -153,10 +153,48 @@ LiteDB 使用 `database/sql` 和 mysql驱动
     <span class="pl-k">if</span> ret.<span class="pl-smi">Err</span> != <span class="pl-c1">nil</span> {
 
     }
+
 </pre></div>
+
+<hr>
+
+<h1>
+<a id="litedb-1" class="anchor" href="#litedb-1" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>litedb</h1>
+
+<h2></h2>
+
+<pre><code>import "github.com/weixinhost/litedb"
+</code></pre>
 
 <h2>
 <a id="usage" class="anchor" href="#usage" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Usage</h2>
+
+<h4>
+<a id="func--liststructtomap" class="anchor" href="#func--liststructtomap" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>func  ListStructToMap</h4>
+
+<div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> <span class="pl-en">ListStructToMap</span>(<span class="pl-v">vs</span> <span class="pl-v">interface</span>{}) ([]<span class="pl-v">map</span>[<span class="pl-v">string</span>]<span class="pl-v">string</span>, <span class="pl-v">error</span>)</pre></div>
+
+<h4>
+<a id="func--structtomap" class="anchor" href="#func--structtomap" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>func  StructToMap</h4>
+
+<div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> <span class="pl-en">StructToMap</span>(<span class="pl-v">structV</span> <span class="pl-v">interface</span>{}) (<span class="pl-v">map</span>[<span class="pl-v">string</span>]<span class="pl-v">string</span>, <span class="pl-v">error</span>)</pre></div>
+
+<h4>
+<a id="func--toint64" class="anchor" href="#func--toint64" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>func  ToInt64</h4>
+
+<div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> <span class="pl-en">ToInt64</span>(<span class="pl-v">value</span> <span class="pl-v">interface</span>{}) (<span class="pl-v">d</span> <span class="pl-v">int64</span>)</pre></div>
+
+<p>ToInt64 interface to int64</p>
+
+<h4>
+<a id="func--tostr" class="anchor" href="#func--tostr" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>func  ToStr</h4>
+
+<div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> <span class="pl-en">ToStr</span>(<span class="pl-v">value</span> <span class="pl-v">interface</span>{}, <span class="pl-v">args</span> ...<span class="pl-v">int</span>) (<span class="pl-v">s</span> <span class="pl-v">string</span>)</pre></div>
+
+<p>ToStr interface to string</p>
+
+<h4>
+<a id="type-client" class="anchor" href="#type-client" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>type Client</h4>
 
 <div class="highlight highlight-source-go"><pre><span class="pl-k">type</span> <span class="pl-v">Client</span> <span class="pl-k">struct</span> {
     <span class="pl-v">Sql</span>
@@ -200,27 +238,11 @@ LiteDB 使用 `database/sql` 和 mysql驱动
 <p>关闭数据库</p>
 
 <h4>
-<a id="func-client-exec" class="anchor" href="#func-client-exec" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>func (*Client) Exec</h4>
-
-<div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> <span class="pl-en">(<span class="pl-v">this</span> *<span class="pl-v">Client</span>) <span class="pl-en">Exec</span></span>(<span class="pl-v">sqlFmt</span> <span class="pl-v">string</span>, <span class="pl-v">sqlValue</span> ...<span class="pl-v">interface</span>{}) *<span class="pl-v">ClientExecResult</span></pre></div>
-
-<p>UPDATE <code>Table</code> SET <code>field_1</code> = Value Where id = 1 UPDATE SET <code>field_1</code> = ? WHERE
-id = ? ,Value,1 支持完整的SQL语句与?占位符.对于?占位符的使用请参考官方文档 ?占位符是字符串安全的,请尽量使用?占位符</p>
-
-<h4>
 <a id="func-client-ping" class="anchor" href="#func-client-ping" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>func (*Client) Ping</h4>
 
 <div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> <span class="pl-en">(<span class="pl-v">this</span> *<span class="pl-v">Client</span>) <span class="pl-en">Ping</span></span>() <span class="pl-v">error</span></pre></div>
 
 <p>ping</p>
-
-<h4>
-<a id="func-client-query" class="anchor" href="#func-client-query" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>func (*Client) Query</h4>
-
-<div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> <span class="pl-en">(<span class="pl-v">this</span> *<span class="pl-v">Client</span>) <span class="pl-en">Query</span></span>(<span class="pl-v">sqlFmt</span> <span class="pl-v">string</span>, <span class="pl-v">sqlValue</span> ...<span class="pl-v">interface</span>{}) *<span class="pl-v">ClientQueryResult</span></pre></div>
-
-<p>SELECT * FROM Table WHERE id = 1 SELECT * FROM Table WHERE id = ?
-支持完整的SQL语句与?占位符.对于?占位符的使用请参考官方文档 ?占位符是字符串安全的,请尽量使用?占位符</p>
 
 <h4>
 <a id="type-clientdnsconfigure" class="anchor" href="#type-clientdnsconfigure" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>type ClientDNSConfigure</h4>
@@ -261,7 +283,8 @@ id = ? ,Value,1 支持完整的SQL语句与?占位符.对于?占位符的使用�
 
 <div class="highlight highlight-source-go"><pre><span class="pl-k">type</span> <span class="pl-v">ClientExecResult</span> <span class="pl-k">struct</span> {
     <span class="pl-v">Result</span> sql.<span class="pl-smi">Result</span>
-    <span class="pl-v">Err</span>    <span class="pl-k">error</span>
+    <span class="pl-v">Err</span>    <span class="pl-k">error</span> <span class="pl-c">//db error</span>
+    <span class="pl-v">Warn</span>   <span class="pl-k">error</span> <span class="pl-c">// db warning</span>
 }</pre></div>
 
 <p>Client.Exec 的结果</p>
@@ -271,7 +294,8 @@ id = ? ,Value,1 支持完整的SQL语句与?占位符.对于?占位符的使用�
 
 <div class="highlight highlight-source-go"><pre><span class="pl-k">type</span> <span class="pl-v">ClientQueryResult</span> <span class="pl-k">struct</span> {
     <span class="pl-v">Rows</span> *sql.<span class="pl-smi">Rows</span>
-    <span class="pl-v">Err</span>  <span class="pl-k">error</span>
+    <span class="pl-v">Err</span>  <span class="pl-k">error</span> <span class="pl-c">// db error</span>
+    <span class="pl-v">Warn</span> <span class="pl-k">error</span> <span class="pl-c">// db warning</span>
 }</pre></div>
 
 <p>Client.Query 的结果</p>
@@ -339,9 +363,21 @@ id = ? ,Value,1 支持完整的SQL语句与?占位符.对于?占位符的使用�
 <p>[]byte</p>
 
 <h4>
+<a id="type-marshalbinary" class="anchor" href="#type-marshalbinary" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>type MarshalBinary</h4>
+
+<div class="highlight highlight-source-go"><pre><span class="pl-k">type</span> <span class="pl-v">MarshalBinary</span> <span class="pl-k">interface</span> {
+    <span class="pl-c1">MarshalDB</span>() ([]<span class="pl-k">byte</span>, <span class="pl-k">error</span>)
+}</pre></div>
+
+<p>支持struct中的字段拥有更复杂的类型. 需要实现该接口才能正确的打包成string插入数据库中</p>
+
+<h4>
 <a id="type-sql" class="anchor" href="#type-sql" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>type Sql</h4>
 
-<div class="highlight highlight-source-go"><pre><span class="pl-k">type</span> <span class="pl-v">Sql</span> <span class="pl-k">struct</span>{}</pre></div>
+<div class="highlight highlight-source-go"><pre><span class="pl-k">type</span> <span class="pl-v">Sql</span> <span class="pl-k">struct</span> {
+    <span class="pl-v">Exec</span>  <span class="pl-c1">func</span>(sqlFmt <span class="pl-k">string</span>, sqlValue ...<span class="pl-smi">interface</span>{}) *ClientExecResult
+    <span class="pl-v">Query</span> <span class="pl-k">func</span>(sqlFmt <span class="pl-k">string</span>, sqlValue ...<span class="pl-smi">interface</span>{}) *ClientQueryResult
+}</pre></div>
 
 <p>Sql操作集</p>
 
@@ -359,13 +395,6 @@ INTO 来支持批量插入. 使用Insert Into 的问题是全部待插入的数�
 <div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> <span class="pl-en">(<span class="pl-v">this</span> *<span class="pl-v">Sql</span>) <span class="pl-en">Delete</span></span>(<span class="pl-v">table</span> <span class="pl-v">string</span>, <span class="pl-v">whereFmt</span> <span class="pl-v">string</span>, <span class="pl-v">whereValue</span> ...<span class="pl-v">interface</span>{}) *<span class="pl-v">ClientExecResult</span></pre></div>
 
 <p>根据Where条件删除数据</p>
-
-<h4>
-<a id="func-sql-exec" class="anchor" href="#func-sql-exec" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>func (*Sql) Exec</h4>
-
-<div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> <span class="pl-en">(<span class="pl-v">this</span> *<span class="pl-v">Sql</span>) <span class="pl-en">Exec</span></span>(<span class="pl-v">sqlFmt</span> <span class="pl-v">string</span>, <span class="pl-v">sqlValue</span> ...<span class="pl-v">interface</span>{}) *<span class="pl-v">ClientExecResult</span></pre></div>
-
-<p>not implement anythings</p>
 
 <h4>
 <a id="func-sql-insert" class="anchor" href="#func-sql-insert" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>func (*Sql) Insert</h4>
@@ -390,13 +419,6 @@ INTO 来支持批量插入. 使用Insert Into 的问题是全部待插入的数�
 .... 可以指定更新字段</p>
 
 <h4>
-<a id="func-sql-query" class="anchor" href="#func-sql-query" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>func (*Sql) Query</h4>
-
-<div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> <span class="pl-en">(<span class="pl-v">this</span> *<span class="pl-v">Sql</span>) <span class="pl-en">Query</span></span>(<span class="pl-v">sqlFmt</span> <span class="pl-v">string</span>, <span class="pl-v">sqlValue</span> ...<span class="pl-v">interface</span>{}) *<span class="pl-v">ClientQueryResult</span></pre></div>
-
-<p>not implement anythings</p>
-
-<h4>
 <a id="func-sql-update" class="anchor" href="#func-sql-update" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>func (*Sql) Update</h4>
 
 <div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> <span class="pl-en">(<span class="pl-v">this</span> *<span class="pl-v">Sql</span>) <span class="pl-en">Update</span></span>(<span class="pl-v">table</span> <span class="pl-v">string</span>, <span class="pl-v">v</span> <span class="pl-v">interface</span>{}, <span class="pl-v">whereFmt</span> <span class="pl-v">string</span>, <span class="pl-v">whereValue</span> ...<span class="pl-v">interface</span>{}) *<span class="pl-v">ClientExecResult</span></pre></div>
@@ -412,6 +434,132 @@ INTO 来支持批量插入. 使用Insert Into 的问题是全部待插入的数�
 <p>map类型无必要使用该方法 部分字段更新
 该接口的意义是struct类型为完整的数据库字段映射.但某些时候我们仅仅需要更新部分字段.此时,如果使用完整映射的进行更新操作 则更容易误覆盖.
 因此提供了这个接口进行部分字段更新. fields 就是需要更新的数据库字段名称 v,whereFmt,WhereValue 等值意义不变</p>
+
+<h4>
+<a id="type-strto" class="anchor" href="#type-strto" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>type StrTo</h4>
+
+<div class="highlight highlight-source-go"><pre><span class="pl-k">type</span> <span class="pl-v">StrTo</span> <span class="pl-k">string</span></pre></div>
+
+<p>StrTo is the target string</p>
+
+<h4>
+<a id="func-strto-bool" class="anchor" href="#func-strto-bool" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>func (StrTo) Bool</h4>
+
+<div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> <span class="pl-en">(<span class="pl-v">f</span> <span class="pl-v">StrTo</span>) <span class="pl-en">Bool</span></span>() (<span class="pl-v">bool</span>, <span class="pl-v">error</span>)</pre></div>
+
+<p>Bool string to bool</p>
+
+<h4>
+<a id="func-strto-clear" class="anchor" href="#func-strto-clear" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>func (*StrTo) Clear</h4>
+
+<div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> <span class="pl-en">(<span class="pl-v">f</span> *<span class="pl-v">StrTo</span>) <span class="pl-en">Clear</span></span>()</pre></div>
+
+<p>Clear string</p>
+
+<h4>
+<a id="func-strto-exist" class="anchor" href="#func-strto-exist" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>func (StrTo) Exist</h4>
+
+<div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> <span class="pl-en">(<span class="pl-v">f</span> <span class="pl-v">StrTo</span>) <span class="pl-en">Exist</span></span>() <span class="pl-v">bool</span></pre></div>
+
+<p>Exist check string exist</p>
+
+<h4>
+<a id="func-strto-float32" class="anchor" href="#func-strto-float32" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>func (StrTo) Float32</h4>
+
+<div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> <span class="pl-en">(<span class="pl-v">f</span> <span class="pl-v">StrTo</span>) <span class="pl-en">Float32</span></span>() (<span class="pl-v">float32</span>, <span class="pl-v">error</span>)</pre></div>
+
+<p>Float32 string to float32</p>
+
+<h4>
+<a id="func-strto-float64" class="anchor" href="#func-strto-float64" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>func (StrTo) Float64</h4>
+
+<div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> <span class="pl-en">(<span class="pl-v">f</span> <span class="pl-v">StrTo</span>) <span class="pl-en">Float64</span></span>() (<span class="pl-v">float64</span>, <span class="pl-v">error</span>)</pre></div>
+
+<p>Float64 string to float64</p>
+
+<h4>
+<a id="func-strto-int" class="anchor" href="#func-strto-int" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>func (StrTo) Int</h4>
+
+<div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> <span class="pl-en">(<span class="pl-v">f</span> <span class="pl-v">StrTo</span>) <span class="pl-en">Int</span></span>() (<span class="pl-v">int</span>, <span class="pl-v">error</span>)</pre></div>
+
+<p>Int string to int</p>
+
+<h4>
+<a id="func-strto-int16" class="anchor" href="#func-strto-int16" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>func (StrTo) Int16</h4>
+
+<div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> <span class="pl-en">(<span class="pl-v">f</span> <span class="pl-v">StrTo</span>) <span class="pl-en">Int16</span></span>() (<span class="pl-v">int16</span>, <span class="pl-v">error</span>)</pre></div>
+
+<p>Int16 string to int16</p>
+
+<h4>
+<a id="func-strto-int32" class="anchor" href="#func-strto-int32" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>func (StrTo) Int32</h4>
+
+<div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> <span class="pl-en">(<span class="pl-v">f</span> <span class="pl-v">StrTo</span>) <span class="pl-en">Int32</span></span>() (<span class="pl-v">int32</span>, <span class="pl-v">error</span>)</pre></div>
+
+<p>Int32 string to int32</p>
+
+<h4>
+<a id="func-strto-int64" class="anchor" href="#func-strto-int64" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>func (StrTo) Int64</h4>
+
+<div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> <span class="pl-en">(<span class="pl-v">f</span> <span class="pl-v">StrTo</span>) <span class="pl-en">Int64</span></span>() (<span class="pl-v">int64</span>, <span class="pl-v">error</span>)</pre></div>
+
+<p>Int64 string to int64</p>
+
+<h4>
+<a id="func-strto-int8" class="anchor" href="#func-strto-int8" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>func (StrTo) Int8</h4>
+
+<div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> <span class="pl-en">(<span class="pl-v">f</span> <span class="pl-v">StrTo</span>) <span class="pl-en">Int8</span></span>() (<span class="pl-v">int8</span>, <span class="pl-v">error</span>)</pre></div>
+
+<p>Int8 string to int8</p>
+
+<h4>
+<a id="func-strto-set" class="anchor" href="#func-strto-set" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>func (*StrTo) Set</h4>
+
+<div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> <span class="pl-en">(<span class="pl-v">f</span> *<span class="pl-v">StrTo</span>) <span class="pl-en">Set</span></span>(<span class="pl-v">v</span> <span class="pl-v">string</span>)</pre></div>
+
+<p>Set string</p>
+
+<h4>
+<a id="func-strto-string" class="anchor" href="#func-strto-string" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>func (StrTo) String</h4>
+
+<div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> <span class="pl-en">(<span class="pl-v">f</span> <span class="pl-v">StrTo</span>) <span class="pl-en">String</span></span>() <span class="pl-v">string</span></pre></div>
+
+<p>String string to string</p>
+
+<h4>
+<a id="func-strto-uint" class="anchor" href="#func-strto-uint" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>func (StrTo) Uint</h4>
+
+<div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> <span class="pl-en">(<span class="pl-v">f</span> <span class="pl-v">StrTo</span>) <span class="pl-en">Uint</span></span>() (<span class="pl-v">uint</span>, <span class="pl-v">error</span>)</pre></div>
+
+<p>Uint string to uint</p>
+
+<h4>
+<a id="func-strto-uint16" class="anchor" href="#func-strto-uint16" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>func (StrTo) Uint16</h4>
+
+<div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> <span class="pl-en">(<span class="pl-v">f</span> <span class="pl-v">StrTo</span>) <span class="pl-en">Uint16</span></span>() (<span class="pl-v">uint16</span>, <span class="pl-v">error</span>)</pre></div>
+
+<p>Uint16 string to uint16</p>
+
+<h4>
+<a id="func-strto-uint32" class="anchor" href="#func-strto-uint32" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>func (StrTo) Uint32</h4>
+
+<div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> <span class="pl-en">(<span class="pl-v">f</span> <span class="pl-v">StrTo</span>) <span class="pl-en">Uint32</span></span>() (<span class="pl-v">uint32</span>, <span class="pl-v">error</span>)</pre></div>
+
+<p>Uint32 string to uint31</p>
+
+<h4>
+<a id="func-strto-uint64" class="anchor" href="#func-strto-uint64" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>func (StrTo) Uint64</h4>
+
+<div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> <span class="pl-en">(<span class="pl-v">f</span> <span class="pl-v">StrTo</span>) <span class="pl-en">Uint64</span></span>() (<span class="pl-v">uint64</span>, <span class="pl-v">error</span>)</pre></div>
+
+<p>Uint64 string to uint64</p>
+
+<h4>
+<a id="func-strto-uint8" class="anchor" href="#func-strto-uint8" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>func (StrTo) Uint8</h4>
+
+<div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> <span class="pl-en">(<span class="pl-v">f</span> <span class="pl-v">StrTo</span>) <span class="pl-en">Uint8</span></span>() (<span class="pl-v">uint8</span>, <span class="pl-v">error</span>)</pre></div>
+
+<p>Uint8 string to uint8</p>
 
 <h4>
 <a id="type-transaction" class="anchor" href="#type-transaction" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>type Transaction</h4>
@@ -430,22 +578,6 @@ INTO 来支持批量插入. 使用Insert Into 的问题是全部待插入的数�
 <p>提交事务</p>
 
 <h4>
-<a id="func-transaction-exec" class="anchor" href="#func-transaction-exec" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>func (*Transaction) Exec</h4>
-
-<div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> <span class="pl-en">(<span class="pl-v">this</span> *<span class="pl-v">Transaction</span>) <span class="pl-en">Exec</span></span>(<span class="pl-v">sqlFmt</span> <span class="pl-v">string</span>, <span class="pl-v">sqlValue</span> ...<span class="pl-v">interface</span>{}) *<span class="pl-v">ClientExecResult</span></pre></div>
-
-<p>UPDATE <code>Table</code> SET <code>field_1</code> = Value Where id = 1 UPDATE SET <code>field_1</code> = ? WHERE
-id = ? ,Value,1 支持完整的SQL语句与?占位符.对于?占位符的使用请参考官方文档 ?占位符是字符串安全的,请尽量使用?占位符</p>
-
-<h4>
-<a id="func-transaction-query" class="anchor" href="#func-transaction-query" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>func (*Transaction) Query</h4>
-
-<div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> <span class="pl-en">(<span class="pl-v">this</span> *<span class="pl-v">Transaction</span>) <span class="pl-en">Query</span></span>(<span class="pl-v">sqlFmt</span> <span class="pl-v">string</span>, <span class="pl-v">sqlValue</span> ...<span class="pl-v">interface</span>{}) *<span class="pl-v">ClientQueryResult</span></pre></div>
-
-<p>SELECT * FROM Table WHERE id = 1 SELECT * FROM Table WHERE id = ?
-支持完整的SQL语句与?占位符.对于?占位符的使用请参考官方文档 ?占位符是字符串安全的,请尽量使用?占位符</p>
-
-<h4>
 <a id="func-transaction-roolback" class="anchor" href="#func-transaction-roolback" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>func (*Transaction) Roolback</h4>
 
 <div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> <span class="pl-en">(<span class="pl-v">this</span> *<span class="pl-v">Transaction</span>) <span class="pl-en">Roolback</span></span>() <span class="pl-v">error</span></pre></div>
@@ -459,12 +591,7 @@ id = ? ,Value,1 支持完整的SQL语句与?占位符.对于?占位符的使用�
     <span class="pl-c1">UnmarshalDB</span>(data []<span class="pl-k">byte</span>) <span class="pl-k">error</span>
 }</pre></div>
 
-<h4>
-<a id="type-marshalbinary" class="anchor" href="#type-marshalbinary" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>type MarshalBinary</h4>
-
-<div class="highlight highlight-source-go"><pre><span class="pl-k">type</span> <span class="pl-v">MarshalBinary</span> <span class="pl-k">interface</span> {
-    <span class="pl-c1">MarshalDB</span>() ([]<span class="pl-k">byte</span>, <span class="pl-k">error</span>)
-}</pre></div>
+<p>对 MarshalBinary 的反向操作</p>
 
       <footer class="site-footer">
         <span class="site-footer-owner"><a href="https://github.com/weixinhost/litedb">Litedb</a> is maintained by <a href="https://github.com/weixinhost">weixinhost</a>.</span>
