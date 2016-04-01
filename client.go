@@ -283,9 +283,7 @@ func (this *Sql)InsertOrUpdateFields(table string,v interface{},updateFields...s
 }
 
 // 批量插入
-// SQL语句为: REPLACE INTO `%s` (field,field) VALUES (?,?),(?,?)
-// 我们为什么使用REPLACE INTO 来支持批量插入.
-// 使用Insert Into 的问题是全部待插入的数据行是事务一致的.因此,对于一次插入中,只要有行已经存在,则全部插入失败.
+// SQL语句为: INSERT INTO `%s` (field,field) VALUES (?,?),(?,?)
 func (this *Sql)BatchInsert(table string,vs interface{}) (*ClientExecResult) {
 
 	r := new(ClientExecResult)
@@ -294,6 +292,54 @@ func (this *Sql)BatchInsert(table string,vs interface{}) (*ClientExecResult) {
 
 	if err != nil {
 		r.Err = errors.New("[LiteDB BatchInsert] " + err.Error())
+		return r
+	}
+	valList := make([]interface{},0)
+	sql := fmt.Sprintf("INSERT INTO `%s` ",table)
+
+	smap := list[0]
+	keys := bytes.NewBufferString("")
+
+	keysIndex := []string{}
+
+	for k,_ := range smap {
+		keysIndex = append(keysIndex,k)
+		keys.WriteString(fmt.Sprintf("`%s`,",k))
+	}
+	keysSplit := string(keys.Bytes()[0:keys.Len() - 1])
+
+	sql += fmt.Sprintf("(%s) VALUES ",keysSplit)
+
+	for _,smap := range list {
+		vals  := bytes.NewBufferString("")
+
+		for i:=0 ;i<len(keysIndex);i++ {
+			k := keysIndex[i]
+			v := smap[k]
+			vals.WriteString("?,")
+			valList = append(valList,v)
+		}
+
+		valsSplit := string(vals.Bytes()[0:vals.Len() -1])
+		sql += fmt.Sprintf("(%s),",valsSplit)
+	}
+
+	sql = string([]byte(sql)[0:len(sql) -1])
+
+	return this.Exec(sql,valList...)
+
+}
+
+// 批量重置
+// SQL语句为: REPLACE INTO `%s` (field,field) VALUES (?,?),(?,?)
+func (this *Sql)BatchReplace(table string,vs interface{}) (*ClientExecResult) {
+
+	r := new(ClientExecResult)
+
+	list,err := ListStructToMap(vs)
+
+	if err != nil {
+		r.Err = errors.New("[LiteDB BatchReplace] " + err.Error())
 		return r
 	}
 	valList := make([]interface{},0)
@@ -331,7 +377,6 @@ func (this *Sql)BatchInsert(table string,vs interface{}) (*ClientExecResult) {
 	return this.Exec(sql,valList...)
 
 }
-
 
 // =======================================================================================================
 // -------------------------------------------- Constructor ----------------------------------------------

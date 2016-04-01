@@ -11,7 +11,7 @@ func ParseWhereMap(wheres interface{}) (string,[]interface{}){
 
 	whereMap := make(map[string]interface{},0)
 	valList := make([]interface{},0)
-	
+
 	if reflect.ValueOf(wheres).IsValid() {
 		if reflect.TypeOf(wheres).Kind() == reflect.Map {
 			whereMap = wheres.(map[string]interface{})
