@@ -2,6 +2,7 @@ package utils
 
 import (
 	"testing"
+	"encoding/json"
 )
 
 func TestBasic(t *testing.T) {
@@ -58,7 +59,7 @@ func TestBasicAdvance(t *testing.T) {
 		},
 		"field_2"	: map[string]interface{} {
 			"type"	: "<",
-			"value"	: 123,
+			"value"	: json.Number("123456"),
 		},
 		"field_3"	: map[string]interface{} {
 			"type"	: "not in",

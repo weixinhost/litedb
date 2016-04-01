@@ -35,8 +35,28 @@ func ParseWhereMap(wheres interface{}) (string,[]interface{}){
 
 			t,ok1 := vi["type"]
 
-			vv,ok2 := vi["value"]
+			var vv interface{}
 
+			ev,ok2 := vi["value"]
+
+			if ok2 {
+				if reflect.TypeOf(ev).Kind() == reflect.Struct {
+					ep := reflect.ValueOf(ev)
+					if ep.IsValid() {
+						sn := ep.MethodByName("String")
+						if sn.IsValid() {
+							rets := sn.Call([]reflect.Value{})
+							if len(rets) > 0 {
+								strRet := rets[0]
+								vv = strRet.Interface().(string)
+							}
+						}
+					}
+				}else{
+					vv = ev
+				}
+			}
+			
 			if ok1 && ok2 {
 
 				switch t.(string) {
