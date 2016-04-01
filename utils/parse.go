@@ -21,8 +21,8 @@ func ParseWhereMap(wheres interface{}) (string,[]interface{}){
 	where := "1 "
 
 	for k,v := range whereMap {
-
 		var vv interface{}
+		verifyed := false
 
 		if reflect.TypeOf(v).Kind() == reflect.Struct {
 			ep := reflect.ValueOf(v)
@@ -33,14 +33,16 @@ func ParseWhereMap(wheres interface{}) (string,[]interface{}){
 					if len(rets) > 0 {
 						strRet := rets[0]
 						vv = strRet.Interface().(string)
+						verifyed = true
 					}
 				}
 			}
 		}else{
 			vv = v
+			verifyed = true
 		}
 
-		if reflect.TypeOf(v).Kind() != reflect.Map {
+		if verifyed && reflect.TypeOf(v).Kind() != reflect.Map {
 			where = where + fmt.Sprintf(" AND `%s` = ? ",k)
 			valList = append(valList,vv)
 		}
@@ -57,6 +59,7 @@ func ParseWhereMap(wheres interface{}) (string,[]interface{}){
 			var vv interface{}
 
 			ev,ok2 := vi["value"]
+			verifyed := false
 
 			if ok2 {
 				if reflect.TypeOf(ev).Kind() == reflect.Struct {
@@ -68,15 +71,17 @@ func ParseWhereMap(wheres interface{}) (string,[]interface{}){
 							if len(rets) > 0 {
 								strRet := rets[0]
 								vv = strRet.Interface().(string)
+								verifyed = true
 							}
 						}
 					}
 				}else{
 					vv = ev
+					verifyed = true
 				}
 			}
 
-			if ok1 && ok2 {
+			if verifyed && ok1 && ok2 {
 
 				switch t.(string) {
 
