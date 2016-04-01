@@ -3,6 +3,7 @@ package utils
 import (
 	"reflect"
 	"fmt"
+	"github.com/weixinhost/litedb"
 )
 
 
@@ -21,30 +22,11 @@ func ParseWhereMap(wheres interface{}) (string,[]interface{}){
 	where := "1 "
 
 	for k,v := range whereMap {
-		var vv interface{}
-		verifyed := false
 
-		if reflect.TypeOf(v).Kind() == reflect.Struct {
-			ep := reflect.ValueOf(v)
-			if ep.IsValid() {
-				sn := ep.MethodByName("String")
-				if sn.IsValid() {
-					rets := sn.Call([]reflect.Value{})
-					if len(rets) > 0 {
-						strRet := rets[0]
-						vv = strRet.Interface().(string)
-						verifyed = true
-					}
-				}
-			}
-		}else{
-			vv = v
-			verifyed = true
-		}
-
-		if verifyed && reflect.TypeOf(v).Kind() != reflect.Map {
+		vs := litedb.ToStr(v)
+		if reflect.TypeOf(v).Kind() != reflect.Map {
 			where = where + fmt.Sprintf(" AND `%s` = ? ",k)
-			valList = append(valList,vv)
+			valList = append(valList,vs)
 		}
 	}
 
@@ -56,52 +38,30 @@ func ParseWhereMap(wheres interface{}) (string,[]interface{}){
 
 			t,ok1 := vi["type"]
 
-			var vv interface{}
+			vv,ok2 := vi["value"]
 
-			ev,ok2 := vi["value"]
-			verifyed := false
 
-			if ok2 {
-				if reflect.TypeOf(ev).Kind() == reflect.Struct {
-					ep := reflect.ValueOf(ev)
-					if ep.IsValid() {
-						sn := ep.MethodByName("String")
-						if sn.IsValid() {
-							rets := sn.Call([]reflect.Value{})
-							if len(rets) > 0 {
-								strRet := rets[0]
-								vv = strRet.Interface().(string)
-								verifyed = true
-							}
-						}
-					}
-				}else{
-					vv = ev
-					verifyed = true
-				}
-			}
-
-			if verifyed && ok1 && ok2 {
+			if ok1 && ok2 {
 
 				switch t.(string) {
 
 				case "=" 		: {
 
 					where  = where + fmt.Sprintf(" AND `%s` = ? ",k)
-					valList = append(valList,vv)
+					valList = append(valList,litedb.ToStr(vv))
 
 					break}
 
 				case ">" 		: {
 
 					where  = where + fmt.Sprintf(" AND `%s` > ? ",k)
-					valList = append(valList,vv)
+					valList = append(valList,litedb.ToStr(vv))
 
 					break}
 				case "<" 		: {
 
 					where  = where + fmt.Sprintf(" AND `%s` < ? ",k)
-					valList = append(valList,vv)
+					valList = append(valList,litedb.ToStr(vv))
 
 					break}
 				case "not in"	: {
