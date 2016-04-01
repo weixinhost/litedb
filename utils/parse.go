@@ -21,9 +21,28 @@ func ParseWhereMap(wheres interface{}) (string,[]interface{}){
 	where := "1 "
 
 	for k,v := range whereMap {
+
+		var vv interface{}
+
+		if reflect.TypeOf(v).Kind() == reflect.Struct {
+			ep := reflect.ValueOf(v)
+			if ep.IsValid() {
+				sn := ep.MethodByName("String")
+				if sn.IsValid() {
+					rets := sn.Call([]reflect.Value{})
+					if len(rets) > 0 {
+						strRet := rets[0]
+						vv = strRet.Interface().(string)
+					}
+				}
+			}
+		}else{
+			vv = v
+		}
+
 		if reflect.TypeOf(v).Kind() != reflect.Map {
 			where = where + fmt.Sprintf(" AND `%s` = ? ",k)
-			valList = append(valList,v)
+			valList = append(valList,vv)
 		}
 	}
 
@@ -56,7 +75,7 @@ func ParseWhereMap(wheres interface{}) (string,[]interface{}){
 					vv = ev
 				}
 			}
-			
+
 			if ok1 && ok2 {
 
 				switch t.(string) {

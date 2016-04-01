@@ -50,7 +50,7 @@ func TestAdvance(t *testing.T) {
 func TestBasicAdvance(t *testing.T) {
 
 	where := map[string]interface{} {
-		"a_1"		: 1,
+		"a_1"		: json.Number("8888"),
 		"a_2"		: "sssss",
 		"a_3"		: 12312.12312,
 		"field_1"	: map[string]interface{} {
