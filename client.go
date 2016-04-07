@@ -35,6 +35,9 @@ type Client struct {
 	Config 		*ClientDNSConfigure
 	db 			*sql.DB
 	autoExec 	bool
+
+	maxIdleConn  int
+	maxConn 	 int
 }
 
 //事务客户端
@@ -397,6 +400,9 @@ func NewClient(protocol string,host string,port uint32,user string,password stri
 	client.Protocol = protocol
 	client.Config 	= NewClientDnsConfigure()
 
+	client.maxConn  	= 0;
+	client.maxIdleConn  = 0;
+
 	client.Exec = client.exec
 	client.Query =client.query
 
@@ -487,6 +493,14 @@ func (this *Client)query(sqlFmt string,sqlValue...interface{}) (*ClientQueryResu
 
 	return result
 
+}
+
+func (this *Client)SetMaxIdleConn(n int){
+	this.maxIdleConn = n
+}
+
+func (this *Client)SetMaxConn(n int){
+	this.maxConn = n;
 }
 
 //关闭数据库
@@ -592,9 +606,15 @@ func (this *Client)connect() error{
 		if 	err 	!= nil {
 			this.db  = nil
 			return err
-		}
+		}else{
 
+			this.db.SetMaxIdleConns(this.maxIdleConn)
+			this.db.SetMaxOpenConns(this.maxConn)
+
+		}
 	}
+
+
 
 	return nil
 

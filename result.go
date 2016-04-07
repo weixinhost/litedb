@@ -312,27 +312,29 @@ func mapToReflect(mapV map[string]string,t reflect.Type,p reflect.Value) error{
 			default : {
 
 				m := fv.MethodByName("UnmarshalDB")
+				
+				if m.IsValid(){
+					if len(s.String()) > 0 {
+						var setEle reflect.Value
+						if fv.Type().Kind() == reflect.Ptr {
+							setEle = reflect.New(fv.Type().Elem())
+						}else {
+							setEle = reflect.New(fv.Type())
+						}
 
-				if m.IsValid() && len(s.String()) > 0{
-					var setEle reflect.Value
-					if fv.Type().Kind() == reflect.Ptr {
-						setEle = reflect.New(fv.Type().Elem())
-					}else{
-						setEle = reflect.New(fv.Type())
-					}
+						nm := setEle.MethodByName("UnmarshalDB")
 
-					nm := setEle.MethodByName("UnmarshalDB")
+						vals := nm.Call([]reflect.Value{
+							reflect.ValueOf([]byte(s.String())),
+						})
 
-					vals := nm.Call([]reflect.Value{
-						reflect.ValueOf([]byte(s.String())),
-					})
-
-					if len(vals) > 0 {
-						errVal 	 := vals[0]
-						if !errVal.IsNil(){
-							de = errors.New("[LiteDB mapToStruct] marshal error: " + errVal.Interface().(error).Error())
-						}else{
-							fv.Set(setEle)
+						if len(vals) > 0 {
+							errVal := vals[0]
+							if !errVal.IsNil() {
+								de = errors.New("[LiteDB mapToStruct] marshal error: " + errVal.Interface().(error).Error())
+							}else {
+								fv.Set(setEle)
+							}
 						}
 					}
 
