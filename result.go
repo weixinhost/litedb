@@ -374,7 +374,13 @@ func StructToMap(structV interface{}) (map[string]string, error) {
 
 		retMap := make(map[string]string, 0)
 
-		for k, v := range structV.(map[string]interface{}) {
+		parsedStructV, ok := structV.(map[string]interface{})
+
+		if !ok {
+			return nil, &ReflectError{s: "unsupported this map type:" + t.String() + ", supported map[string]interface{} only."}
+		}
+
+		for k, v := range parsedStructV {
 			retMap[k] = ToStr(v)
 		}
 
