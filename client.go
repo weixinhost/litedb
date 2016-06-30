@@ -517,6 +517,13 @@ func (this *Client) Ping() error {
 //开启事务
 func (this *Client) Begin() (*Transaction, error) {
 
+	if this.db == nil {
+		err := this.connect()
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	tx, err := this.db.Begin()
 
 	if err != nil {
