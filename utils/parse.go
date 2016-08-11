@@ -1,17 +1,16 @@
 package utils
 
 import (
-	"reflect"
 	"fmt"
+	"reflect"
+
 	"github.com/weixinhost/litedb"
 )
 
+func ParseWhereMap(wheres interface{}) (string, []interface{}) {
 
-
-func ParseWhereMap(wheres interface{}) (string,[]interface{}){
-
-	whereMap := make(map[string]interface{},0)
-	valList := make([]interface{},0)
+	whereMap := make(map[string]interface{}, 0)
+	valList := make([]interface{}, 0)
 
 	if reflect.ValueOf(wheres).IsValid() {
 		if reflect.TypeOf(wheres).Kind() == reflect.Map {
@@ -21,80 +20,106 @@ func ParseWhereMap(wheres interface{}) (string,[]interface{}){
 
 	where := "1 "
 
-	for k,v := range whereMap {
+	for k, v := range whereMap {
 
 		vs := litedb.ToStr(v)
 		if reflect.TypeOf(v).Kind() != reflect.Map {
-			where = where + fmt.Sprintf(" AND `%s` = ? ",k)
-			valList = append(valList,vs)
+			where = where + fmt.Sprintf(" AND `%s` = ? ", k)
+			valList = append(valList, vs)
 		}
 	}
 
-	for k,v := range whereMap {
+	for k, v := range whereMap {
 
 		if reflect.TypeOf(v).Kind() == reflect.Map {
 
 			vi := v.(map[string]interface{})
 
-			t,ok1 := vi["type"]
+			t, ok1 := vi["type"]
 
-			vv,ok2 := vi["value"]
-
+			vv, ok2 := vi["value"]
 
 			if ok1 && ok2 {
 
 				switch t.(string) {
 
-				case "=" 		: {
+				case "=":
+					{
 
-					where  = where + fmt.Sprintf(" AND `%s` = ? ",k)
-					valList = append(valList,litedb.ToStr(vv))
+						where = where + fmt.Sprintf(" AND `%s` = ? ", k)
+						valList = append(valList, litedb.ToStr(vv))
 
-					break}
-
-				case ">" 		: {
-
-					where  = where + fmt.Sprintf(" AND `%s` > ? ",k)
-					valList = append(valList,litedb.ToStr(vv))
-
-					break}
-				case "<" 		: {
-
-					where  = where + fmt.Sprintf(" AND `%s` < ? ",k)
-					valList = append(valList,litedb.ToStr(vv))
-
-					break}
-				case "not in"	: {
-
-					valsStr := ""
-
-					for j := 0; j < len(vv.([]interface{}));j++ {
-						valsStr = valsStr + "?"
-
-						if j < len(vv.([]interface{})) -1 {
-							valsStr = valsStr + ","
-						}
+						break
 					}
-					where  = where + fmt.Sprintf(" AND `%s` NOT IN(%s) ",k,valsStr)
-					valList = append(valList,vv.([]interface{})...)
 
-					break}
+				case ">":
+					{
 
-				case "in"		: {
+						where = where + fmt.Sprintf(" AND `%s` > ? ", k)
+						valList = append(valList, litedb.ToStr(vv))
 
-					valsStr := ""
-
-					for j := 0; j < len(vv.([]interface{}));j++ {
-						valsStr = valsStr + "?"
-
-						if j < len(vv.([]interface{})) -1 {
-							valsStr = valsStr + ","
-						}
+						break
 					}
-					where  = where + fmt.Sprintf(" AND `%s` NOT IN(%s) ",k,valsStr)
-					valList = append(valList,vv.([]interface{})...)
-					break
-				}
+				case "<":
+					{
+
+						where = where + fmt.Sprintf(" AND `%s` < ? ", k)
+						valList = append(valList, litedb.ToStr(vv))
+
+						break
+					}
+
+				case "<=":
+					{
+
+						where = where + fmt.Sprintf(" AND `%s` <= ? ", k)
+						valList = append(valList, litedb.ToStr(vv))
+
+						break
+					}
+
+				case ">=":
+					{
+
+						where = where + fmt.Sprintf(" AND `%s` >= ? ", k)
+						valList = append(valList, litedb.ToStr(vv))
+
+						break
+					}
+				case "not in":
+					{
+
+						valsStr := ""
+
+						for j := 0; j < len(vv.([]interface{})); j++ {
+							valsStr = valsStr + "?"
+
+							if j < len(vv.([]interface{}))-1 {
+								valsStr = valsStr + ","
+							}
+						}
+						where = where + fmt.Sprintf(" AND `%s` NOT IN(%s) ", k, valsStr)
+						valList = append(valList, vv.([]interface{})...)
+
+						break
+					}
+
+				case "in":
+					{
+
+						valsStr := ""
+
+						for j := 0; j < len(vv.([]interface{})); j++ {
+							valsStr = valsStr + "?"
+
+							if j < len(vv.([]interface{}))-1 {
+								valsStr = valsStr + ","
+							}
+						}
+						where = where + fmt.Sprintf(" AND `%s` NOT IN(%s) ", k, valsStr)
+						valList = append(valList, vv.([]interface{})...)
+						break
+					}
 
 				}
 			}
@@ -105,5 +130,5 @@ func ParseWhereMap(wheres interface{}) (string,[]interface{}){
 		where = string([]byte(where)[6:])
 	}
 
-	return where,valList
+	return where, valList
 }
