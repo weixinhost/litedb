@@ -86,6 +86,16 @@ func ParseWhereMap(wheres interface{}) (string, []interface{}) {
 
 						break
 					}
+
+				case "<>":
+					{
+
+						where = where + fmt.Sprintf(" AND `%s` <> ? ", k)
+						valList = append(valList, litedb.ToStr(vv))
+
+						break
+					}
+
 				case "not in":
 					{
 
