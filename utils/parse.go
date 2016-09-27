@@ -126,7 +126,7 @@ func ParseWhereMap(wheres interface{}) (string, []interface{}) {
 								valsStr = valsStr + ","
 							}
 						}
-						where = where + fmt.Sprintf(" AND `%s` NOT IN(%s) ", k, valsStr)
+						where = where + fmt.Sprintf(" AND `%s` IN(%s) ", k, valsStr)
 						valList = append(valList, vv.([]interface{})...)
 						break
 					}
