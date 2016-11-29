@@ -11,9 +11,7 @@
     LiteDB 使用 `database/sql` 和 mysql驱动
 
 #### Document
-
-[http://weixinhost.github.io/litedb/](http://weixinhost.github.io/litedb/)
-
+[https://github.com/weixinhost/litedb/wiki](https://github.com/weixinhost/litedb/wiki)
 
 #### Configure
 
