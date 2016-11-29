@@ -10,10 +10,23 @@ import (
 	"bytes"
 	"database/sql"
 	"fmt"
+	"log"
 
 	"github.com/go-sql-driver/mysql"
 	_ "github.com/go-sql-driver/mysql"
 )
+
+var Debug bool = false
+
+//开启Debug模式
+func OpenDebug() {
+	Debug = true
+}
+
+//关闭Debug模式
+func CloseDebug() {
+	Debug = false
+}
 
 //Sql操作集
 type Sql struct {
@@ -449,6 +462,11 @@ func (this *Client) exec(sqlFmt string, sqlValue ...interface{}) *ClientExecResu
 	if result.Warn != nil && len(result.Warn.Error()) == 0 {
 		result.Warn = &NetError{s: "empty warning msg"}
 	}
+
+	if Debug && err != nil {
+		log.Println("[Litedb Debug] exec error:", err, sqlFmt, sqlValue)
+	}
+
 	return result
 }
 
@@ -482,6 +500,10 @@ func (this *Client) query(sqlFmt string, sqlValue ...interface{}) *ClientQueryRe
 
 	if result.Warn != nil && len(result.Warn.Error()) == 0 {
 		result.Warn = &NetError{s: "empty warning msg"}
+	}
+
+	if Debug && err != nil {
+		log.Println("[Litedb Debug] query error:", err, sqlFmt, sqlValue)
 	}
 
 	return result
@@ -526,6 +548,10 @@ func (this *Client) Begin() (*Transaction, error) {
 
 	tx, err := this.db.Begin()
 
+	if Debug && err != nil {
+		log.Println("[Litedb Debug] begin transaction error:", err)
+	}
+
 	if err != nil {
 		return nil, err
 	}
@@ -551,6 +577,9 @@ func (this *Transaction) exec(sqlFmt string, sqlValue ...interface{}) *ClientExe
 	ret, err = this.tx.Exec(sqlFmt, sqlValue...)
 	result.Result = ret
 	result.Err = err
+	if Debug && err != nil {
+		log.Println("[Litedb Debug] exec transaction error:", err, sqlFmt, sqlValue)
+	}
 	return result
 }
 
@@ -565,7 +594,9 @@ func (this *Transaction) query(sqlFmt string, sqlValue ...interface{}) *ClientQu
 	rows, err := this.tx.Query(sqlFmt, sqlValue...)
 	result.Rows = rows
 	result.Err = err
-
+	if Debug && err != nil {
+		log.Println("[Litedb Debug] query transaction error:", err, sqlFmt, sqlValue)
+	}
 	return result
 
 }
@@ -573,13 +604,27 @@ func (this *Transaction) query(sqlFmt string, sqlValue ...interface{}) *ClientQu
 //提交事务
 func (this *Transaction) Commit() error {
 
-	return this.tx.Commit()
+	err := this.tx.Commit()
+	if Debug && err != nil {
+		log.Println("[Litedb Debug] commit transaction error:", err)
+	}
+	return err
 }
 
 //回滚事务
 func (this *Transaction) Roolback() error {
 
-	return this.tx.Rollback()
+	return this.Rollback()
+}
+
+//回滚事务
+func (this *Transaction) Rollback() error {
+
+	err := this.tx.Rollback()
+	if Debug && err != nil {
+		log.Println("[Litedb Debug] rollback transaction error:", err)
+	}
+	return err
 }
 
 // =======================================================================================================
@@ -593,6 +638,9 @@ func (this *Client) connect() error {
 
 		this.db, err = sql.Open("mysql", this.parseDNS())
 		if err != nil {
+			if Debug && err != nil {
+				log.Println("[Litedb Debug] connection error:", err)
+			}
 			if this.db != nil {
 				this.db.Close()
 			}
@@ -616,5 +664,10 @@ func (this *Client) parseDNS() string {
 		config = this.Config.Parse()
 	}
 	dns := fmt.Sprintf("%s:%s@%s(%s:%d)/%s?%s", this.User, this.Password, this.Protocol, this.Host, this.Port, this.Database, config)
+
+	if Debug {
+		log.Println("[Litedb Debug] connection DNS:", dns)
+	}
+
 	return dns
 }
