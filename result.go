@@ -207,6 +207,16 @@ func mapToReflect(mapV map[string]string, t reflect.Type, p reflect.Value) error
 	for i := 0; i < t.NumField(); i++ {
 
 		field := t.Field(i)
+		fv := p.FieldByName(field.Name)
+
+		if field.Anonymous {
+
+			if fv.Type().Kind() == reflect.Ptr {
+				newVal := reflect.New(fv.Type().Elem())
+				mapToReflect(mapV, newVal.Type().Elem(), newVal.Elem())
+				fv.Set(newVal)
+			}
+		}
 
 		tag := field.Tag.Get("db")
 
@@ -218,8 +228,6 @@ func mapToReflect(mapV map[string]string, t reflect.Type, p reflect.Value) error
 
 			var s StrTo
 			s.Set(tv)
-
-			fv := p.FieldByName(field.Name)
 
 			if fv.IsValid() == false || fv.CanSet() == false {
 				return &ReflectError{s: "filed:" + field.Name + " value error"}
@@ -417,14 +425,42 @@ func reflectToMap(t reflect.Type, p reflect.Value) (map[string]string, error) {
 	for i := 0; i < t.NumField(); i++ {
 
 		field := t.Field(i)
+		fv := p.FieldByName(field.Name)
+		if field.Anonymous {
+			var inner map[string]string
+			if fv.Type().Kind() == reflect.Ptr {
+				temp, err := reflectToMap(fv.Type().Elem(), fv.Elem())
+				if err != nil {
+					return nil, err
+				}
+				inner = temp
+			}
+			if fv.Type().Kind() == reflect.Struct {
+				temp, err := reflectToMap(fv.Type(), fv)
+				if err != nil {
+					return nil, err
+				}
+				inner = temp
+			}
 
+			for k, v := range inner {
+				ret[k] = v
+			}
+		}
+
+	}
+
+	for i := 0; i < t.NumField(); i++ {
+
+		field := t.Field(i)
+		fv := p.FieldByName(field.Name)
+		if field.Anonymous {
+			continue
+		}
 		tag := field.Tag.Get("db")
-
 		if len(tag) < 1 || tag == "-" {
 			continue
 		}
-
-		fv := p.FieldByName(field.Name)
 
 		var storStr string = ""
 
