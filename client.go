@@ -12,11 +12,21 @@ import (
 	"fmt"
 	"log"
 
+	"time"
+
 	"github.com/go-sql-driver/mysql"
 	_ "github.com/go-sql-driver/mysql"
 )
 
 var Debug bool = false
+var connMaxLiftTime time.Duration = 0
+
+/**
+设置每个连接的最大生存时间。如果小于等于0 则用不过期。
+**/
+func SetConnMaxLifeTime(max time.Duration) {
+	connMaxLiftTime = max
+}
 
 //开启Debug模式
 func OpenDebug() {
@@ -651,6 +661,8 @@ func (this *Client) connect() error {
 
 		}
 	}
+
+	this.db.SetConnMaxLifetime(connMaxLiftTime)
 
 	return nil
 
