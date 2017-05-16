@@ -19,7 +19,7 @@ import (
 )
 
 var Debug bool = false
-var connMaxLiftTime time.Duration = 0
+var connMaxLiftTime time.Duration = 3600 * 6 * time.Second //默认连接过期时间，6个小时
 
 /**
 设置每个连接的最大生存时间。如果小于等于0 则用不过期。
