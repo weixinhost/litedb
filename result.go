@@ -3,6 +3,7 @@ package litedb
 import (
 	"database/sql"
 	"reflect"
+	"strings"
 )
 
 // Client.Exec 的结果
@@ -220,8 +221,21 @@ func mapToReflect(mapV map[string]string, t reflect.Type, p reflect.Value) error
 
 		tag := field.Tag.Get("db")
 
-		if len(tag) < 1 || tag == "-" {
+		//		if len(tag) < 1 || tag == "-" {
+		//			continue
+		//		}
+		if tag == "-" {
 			continue
+		} else if len(tag) < 1 {
+			tag = field.Tag.Get("json")
+			if len(tag) < 1 || tag == "-" {
+				continue
+			} else {
+				// if has ',', get the name of the tag, abandon the json options.
+				if idx := strings.Index(tag, ","); idx != -1 {
+					tag = tag[:idx]
+				}
+			}
 		}
 
 		if tv, ok := mapV[tag]; ok == true {
@@ -458,8 +472,21 @@ func reflectToMap(t reflect.Type, p reflect.Value) (map[string]string, error) {
 			continue
 		}
 		tag := field.Tag.Get("db")
-		if len(tag) < 1 || tag == "-" {
+		//		if len(tag) < 1 || tag == "-" {
+		//			continue
+		//		}
+		if tag == "-" {
 			continue
+		} else if len(tag) < 1 {
+			tag = field.Tag.Get("json")
+			if len(tag) < 1 || tag == "-" {
+				continue
+			} else {
+				// if has ',', get the name of the tag, abandon the json options.
+				if idx := strings.Index(tag, ","); idx != -1 {
+					tag = tag[:idx]
+				}
+			}
 		}
 
 		var storStr string = ""
