@@ -14,7 +14,6 @@ import (
 
 	"time"
 
-	"github.com/go-sql-driver/mysql"
 	_ "github.com/go-sql-driver/mysql"
 )
 
@@ -457,20 +456,10 @@ func (this *Client) exec(sqlFmt string, sqlValue ...interface{}) *ClientExecResu
 	ret, err = this.db.Exec(sqlFmt, sqlValue...)
 	result.Result = ret
 
-	if _, isWarning := err.(mysql.MySQLWarnings); isWarning {
-		result.Warn = err
-	}
-
-	if result.Warn == nil {
-		result.Err = err
-	}
+	result.Err = err
 
 	if result.Err != nil && len(result.Err.Error()) == 0 {
 		result.Err = &NetError{s: "empty error msg"}
-	}
-
-	if result.Warn != nil && len(result.Warn.Error()) == 0 {
-		result.Warn = &NetError{s: "empty warning msg"}
 	}
 
 	if Debug && err != nil {
@@ -496,20 +485,10 @@ func (this *Client) query(sqlFmt string, sqlValue ...interface{}) *ClientQueryRe
 	rows, err := this.db.Query(sqlFmt, sqlValue...)
 	result.Rows = rows
 
-	if _, isWarning := err.(mysql.MySQLWarnings); isWarning {
-		result.Warn = err
-	}
-
-	if result.Warn == nil {
-		result.Err = err
-	}
+	result.Err = err
 
 	if result.Err != nil && len(result.Err.Error()) == 0 {
 		result.Err = &NetError{s: "empty error msg"}
-	}
-
-	if result.Warn != nil && len(result.Warn.Error()) == 0 {
-		result.Warn = &NetError{s: "empty warning msg"}
 	}
 
 	if Debug && err != nil {

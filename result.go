@@ -9,14 +9,12 @@ import (
 type ClientExecResult struct {
 	Result sql.Result
 	Err    error //db error
-	Warn   error // db warning
 }
 
 // Client.Query 的结果
 type ClientQueryResult struct {
 	Rows *sql.Rows
 	Err  error // db error
-	Warn error // db warning
 }
 
 //支持struct中的字段拥有更复杂的类型.
