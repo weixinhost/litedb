@@ -55,7 +55,6 @@ func (this *ClientDNSConfigure) defaultConfigure() {
 	this.Set("timeout", "5s") //connect timeout
 	this.Set("readTimeout", "15s")
 	this.Set("writeTimeout", "15s")
-	this.Set("strict", "true")
 	this.Set("sql_notes", "false")
 	this.Set("clientFoundRows", "true")
 	this.Set("collation", "utf8mb4_general_ci")
