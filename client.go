@@ -405,9 +405,8 @@ func (this *Sql) BatchReplace(table string, vs interface{}) *ClientExecResult {
 // =======================================================================================================
 
 //初始化数据库
-//此时并未打开连接池
-//只有在真实需要与数据库交互的时候才会进行连接.
-func NewClient(protocol string, host string, port uint32, user string, password string, database string) *Client {
+//此时已经打开连接池，如果数据库连接失败会返回error
+func NewClient(protocol string, host string, port uint32, user string, password string, database string) (*Client, error) {
 
 	client := new(Client)
 
@@ -425,11 +424,16 @@ func NewClient(protocol string, host string, port uint32, user string, password 
 	client.Exec = client.exec
 	client.Query = client.query
 
-	return client
+	if err := client.connect(); err != nil {
+		log.Println(&NetError{s: "connect error:" + err.Error()})
+		return nil, err
+	}
+
+	return client, nil
 }
 
 //初始化一个TCP客户端
-func NewTcpClient(host string, port uint32, user string, password string, database string) *Client {
+func NewTcpClient(host string, port uint32, user string, password string, database string) (*Client, error) {
 	return NewClient("tcp", host, port, user, password, database)
 }
 
@@ -499,12 +503,18 @@ func (this *Client) query(sqlFmt string, sqlValue ...interface{}) *ClientQueryRe
 
 }
 
+func (this *Client) DBStats() sql.DBStats {
+	return this.db.Stats()
+}
+
 func (this *Client) SetMaxIdleConn(n int) {
 	this.maxIdleConn = n
+	this.db.SetMaxIdleConns(n)
 }
 
 func (this *Client) SetMaxConn(n int) {
 	this.maxConn = n
+	this.db.SetMaxOpenConns(n)
 }
 
 //关闭数据库
