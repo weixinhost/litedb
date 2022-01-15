@@ -58,6 +58,7 @@ type Client struct {
 
 	maxIdleConn int
 	maxConn     int
+	connMaxLifetime time.Duration
 }
 
 //事务客户端
@@ -510,6 +511,11 @@ func (this *Client) DBStats() sql.DBStats {
 func (this *Client) SetMaxIdleConn(n int) {
 	this.maxIdleConn = n
 	this.db.SetMaxIdleConns(n)
+}
+
+func (this *Client) SetConnMaxLifetime(d time.Duration) {
+	this.connMaxLifetime = d
+	this.db.SetConnMaxLifetime(d)
 }
 
 func (this *Client) SetMaxConn(n int) {
