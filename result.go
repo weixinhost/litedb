@@ -326,6 +326,12 @@ func mapToReflect(mapV map[string]string, t reflect.Type, p reflect.Value) error
 					fv.SetString(s.String())
 					break
 				}
+			case reflect.Bool:
+				{
+					if dv, de := s.Bool(); de == nil {
+						fv.SetBool(dv)
+					}
+				}
 
 			default:
 				{
