@@ -3,6 +3,7 @@ package utils
 import (
 	"fmt"
 	"reflect"
+	"strings"
 
 	"github.com/weixinhost/litedb"
 )
@@ -40,8 +41,10 @@ func ParseWhereMap(wheres interface{}) (string, []interface{}) {
 			vv, ok2 := vi["value"]
 
 			if ok1 && ok2 {
+				
+				tStr := strings.ToLower(t.(string))
 
-				switch t.(string) {
+				switch tStr {
 
 				case "=":
 					{
@@ -91,6 +94,14 @@ func ParseWhereMap(wheres interface{}) (string, []interface{}) {
 					{
 
 						where = where + fmt.Sprintf(" AND `%s` <> ? ", k)
+						valList = append(valList, litedb.ToStr(vv))
+
+						break
+					}
+				case "like":
+					{
+
+						where = where + fmt.Sprintf(" AND `%s` LIKE ? ", k)
 						valList = append(valList, litedb.ToStr(vv))
 
 						break
