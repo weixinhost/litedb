@@ -670,7 +670,14 @@ func (this *Client) parseDNS() string {
 	if this.Config != nil {
 		config = this.Config.Parse()
 	}
-	dns := fmt.Sprintf("%s:%s@%s(%s:%d)/%s?%s", this.User, this.Password, this.Protocol, this.Host, this.Port, this.Database, config)
+	
+	dns := ""
+
+	if this.Protocol == "unix" {
+		dns = fmt.Sprintf("%s:%s@%s(%s)/%s?%s", this.User, this.Password, this.Protocol, this.Host, this.Database, config)
+	} else {
+		dns = fmt.Sprintf("%s:%s@%s(%s:%d)/%s?%s", this.User, this.Password, this.Protocol, this.Host, this.Port, this.Database, config)
+	}
 
 	if Debug {
 		log.Println("[Litedb Debug] connection DNS:", dns)
