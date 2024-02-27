@@ -17,21 +17,21 @@ type ClientQueryResult struct {
 	Err  error // db error
 }
 
-//支持struct中的字段拥有更复杂的类型.
-//需要实现该接口才能正确的打包成string插入数据库中
+// 支持struct中的字段拥有更复杂的类型.
+// 需要实现该接口才能正确的打包成string插入数据库中
 type MarshalBinary interface {
 	MarshalDB() ([]byte, error)
 }
 
-//对 MarshalBinary 的反向操作
+// 对 MarshalBinary 的反向操作
 type UnmarshalBinary interface {
 	UnmarshalDB(data []byte) error
 }
 
-//ToMap 将结果集转换为Map类型.
-//这个操作不进行任何类型转换.
-//因为这里的类型转换需要一次SQL去反射字段类型.
-//更多的时候会得不偿失.
+// ToMap 将结果集转换为Map类型.
+// 这个操作不进行任何类型转换.
+// 因为这里的类型转换需要一次SQL去反射字段类型.
+// 更多的时候会得不偿失.
 func (this *ClientQueryResult) ToMap() ([]map[string]string, error) {
 
 	if this.Err != nil {
@@ -96,10 +96,11 @@ func (this *ClientQueryResult) FirstToMap() (map[string]string, error) {
 
 // 将首行解析成一个Struct ,需要传递一个 struct的指针.
 // struct 定义中使用标签 tag 来进行数据库字段映射,比如
-// struct {
-// 	 Id int `db:"id"`
-//   Name string `db:"name"`
-// }
+//
+//	struct {
+//		 Id int `db:"id"`
+//	  Name string `db:"name"`
+//	}
 func (this *ClientQueryResult) FirstToStruct(v interface{}) error {
 
 	first, err := this.FirstToMap()
@@ -112,7 +113,7 @@ func (this *ClientQueryResult) FirstToStruct(v interface{}) error {
 
 }
 
-//将结果集转换成一个struct 数组
+// 将结果集转换成一个struct 数组
 // var containers []Person
 //
 // ToStruct(&containers)
@@ -211,7 +212,7 @@ func mapToReflect(mapV map[string]string, t reflect.Type, p reflect.Value) error
 
 			if fv.Type().Kind() == reflect.Ptr {
 				newVal := reflect.New(fv.Type().Elem())
-				mapToReflect(mapV, newVal.Type().Elem(), newVal.Elem())
+				_ = mapToReflect(mapV, newVal.Type().Elem(), newVal.Elem())
 				fv.Set(newVal)
 			}
 		}
@@ -222,12 +223,12 @@ func mapToReflect(mapV map[string]string, t reflect.Type, p reflect.Value) error
 			continue
 		}
 
-		if tv, ok := mapV[tag]; ok == true {
+		if tv, ok := mapV[tag]; ok {
 
 			var s StrTo
 			s.Set(tv)
 
-			if fv.IsValid() == false || fv.CanSet() == false {
+			if !fv.IsValid() || !fv.CanSet() {
 				return &ReflectError{s: "filed:" + field.Name + " value error"}
 			}
 
@@ -501,11 +502,11 @@ func ListStructToMap(vs interface{}) ([]map[string]string, error) {
 
 	ret := make([]map[string]string, 0)
 
-	t := reflect.TypeOf(vs)
+	//t := reflect.TypeOf(vs)
 	p := reflect.ValueOf(vs)
 
 	if p.Kind() == reflect.Ptr {
-		t = t.Elem()
+		//t = t.Elem()
 		p = p.Elem()
 	}
 

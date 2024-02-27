@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"reflect"
 	"strconv"
-	"strings"
 )
 
 // StrTo is the target string
@@ -21,12 +20,12 @@ func (f *StrTo) Set(v string) {
 
 // Clear string
 func (f *StrTo) Clear() {
-	*f = StrTo(0x1E)
+	*f = StrTo(rune(0x1E))
 }
 
 // Exist check string exist
 func (f StrTo) Exist() bool {
-	return string(f) != string(0x1E)
+	return string(f) != string(rune(0x1E))
 }
 
 // Bool string to bool
@@ -166,61 +165,6 @@ func ToInt64(value interface{}) (d int64) {
 	return
 }
 
-// snake string, XxYy to xx_yy
-func snakeString(s string) string {
-	data := make([]byte, 0, len(s)*2)
-	j := false
-	num := len(s)
-	for i := 0; i < num; i++ {
-		d := s[i]
-		if i > 0 && d >= 'A' && d <= 'Z' && j {
-			data = append(data, '_')
-		}
-		if d != '_' {
-			j = true
-		}
-		data = append(data, d)
-	}
-	return strings.ToLower(string(data[:]))
-}
-
-// camel string, xx_yy to XxYy
-func camelString(s string) string {
-	data := make([]byte, 0, len(s))
-	j := false
-	k := false
-	num := len(s) - 1
-	for i := 0; i <= num; i++ {
-		d := s[i]
-		if k == false && d >= 'A' && d <= 'Z' {
-			k = true
-		}
-		if d >= 'a' && d <= 'z' && (j || k == false) {
-			d = d - 32
-			j = false
-			k = true
-		}
-		if k && d == '_' && num > i && s[i+1] >= 'a' && s[i+1] <= 'z' {
-			j = true
-			continue
-		}
-		data = append(data, d)
-	}
-	return string(data[:])
-}
-
-type argString []string
-
-// get string by index from string slice
-func (a argString) Get(i int, args ...string) (r string) {
-	if i >= 0 && i < len(a) {
-		r = a[i]
-	} else if len(args) > 0 {
-		r = args[0]
-	}
-	return
-}
-
 type argInt []int
 
 // get int by index from int slice
@@ -232,14 +176,4 @@ func (a argInt) Get(i int, args ...int) (r int) {
 		r = args[0]
 	}
 	return
-}
-
-// get pointer indirect type
-func indirectType(v reflect.Type) reflect.Type {
-	switch v.Kind() {
-	case reflect.Ptr:
-		return indirectType(v.Elem())
-	default:
-		return v
-	}
 }

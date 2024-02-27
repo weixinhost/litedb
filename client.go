@@ -8,60 +8,66 @@ package litedb
 
 import (
 	"bytes"
+	"crypto/tls"
+	"crypto/x509"
 	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 
 	"time"
 
-	_ "github.com/go-sql-driver/mysql"
+	"github.com/go-sql-driver/mysql"
 )
 
 var Debug bool = false
 var connMaxLiftTime time.Duration = 3600 * 6 * time.Second //默认连接过期时间，6个小时
 
-/**
+/*
+*
 设置每个连接的最大生存时间。如果小于等于0 则用不过期。
-**/
+*
+*/
 func SetConnMaxLifeTime(max time.Duration) {
 	connMaxLiftTime = max
 }
 
-//开启Debug模式
+// 开启Debug模式
 func OpenDebug() {
 	Debug = true
 }
 
-//关闭Debug模式
+// 关闭Debug模式
 func CloseDebug() {
 	Debug = false
 }
 
-//Sql操作集
+// Sql操作集
 type Sql struct {
 	Exec  func(sqlFmt string, sqlValue ...interface{}) *ClientExecResult
 	Query func(sqlFmt string, sqlValue ...interface{}) *ClientQueryResult
 }
 
-//客户端
+// 客户端
 type Client struct {
 	Sql
-	Host     string
-	Port     uint32
-	User     string
-	Password string
-	Database string
-	Protocol string
-	Config   *ClientDNSConfigure
-	db       *sql.DB
-	autoExec bool
+	Host         string
+	Port         uint32
+	User         string
+	Password     string
+	Database     string
+	Protocol     string
+	SSL          bool
+	RootCertData []byte
+	Config       *ClientDNSConfigure
+	db           *sql.DB
 
-	maxIdleConn int
-	maxConn     int
+	maxIdleConn     int
+	maxConn         int
 	connMaxLifetime time.Duration
 }
 
-//事务客户端
+// 事务客户端
 type Transaction struct {
 	Sql
 	tx *sql.Tx
@@ -161,7 +167,7 @@ func (this *Sql) UpdateFields(table string, v interface{}, fields []string, wher
 
 	for _, f := range fields {
 		v, ok := smap[f]
-		if ok == true {
+		if ok {
 			vmap[f] = v
 		}
 	}
@@ -405,9 +411,9 @@ func (this *Sql) BatchReplace(table string, vs interface{}) *ClientExecResult {
 // -------------------------------------------- Constructor ----------------------------------------------
 // =======================================================================================================
 
-//初始化数据库
-//此时已经打开连接池，如果数据库连接失败会返回error
-func NewClient(protocol string, host string, port uint32, user string, password string, database string) (*Client, error) {
+// 初始化数据库
+// 此时已经打开连接池，如果数据库连接失败会返回error
+func NewClient(protocol string, host string, port uint32, user string, password string, database string, ssl bool, rootCertData []byte) (*Client, error) {
 
 	client := new(Client)
 
@@ -417,6 +423,8 @@ func NewClient(protocol string, host string, port uint32, user string, password 
 	client.Password = password
 	client.Database = database
 	client.Protocol = protocol
+	client.SSL = ssl
+	client.RootCertData = rootCertData
 	client.Config = NewClientDnsConfigure()
 
 	client.maxConn = 0
@@ -433,9 +441,9 @@ func NewClient(protocol string, host string, port uint32, user string, password 
 	return client, nil
 }
 
-//初始化一个TCP客户端
-func NewTcpClient(host string, port uint32, user string, password string, database string) (*Client, error) {
-	return NewClient("tcp", host, port, user, password, database)
+// 初始化一个TCP客户端
+func NewTcpClient(host string, port uint32, user string, password string, database string, ssl bool, rootCertData []byte) (*Client, error) {
+	return NewClient("tcp", host, port, user, password, database, ssl, rootCertData)
 }
 
 // =======================================================================================================
@@ -523,7 +531,7 @@ func (this *Client) SetMaxConn(n int) {
 	this.db.SetMaxOpenConns(n)
 }
 
-//关闭数据库
+// 关闭数据库
 func (this *Client) Close() error {
 
 	if this.db != nil {
@@ -533,7 +541,7 @@ func (this *Client) Close() error {
 	return nil
 }
 
-//ping
+// ping
 func (this *Client) Ping() error {
 	if err := this.connect(); err != nil {
 		return &NetError{s: "ping error:" + err.Error()}
@@ -541,7 +549,7 @@ func (this *Client) Ping() error {
 	return this.db.Ping()
 }
 
-//开启事务
+// 开启事务
 func (this *Client) Begin() (*Transaction, error) {
 
 	if this.db == nil {
@@ -606,7 +614,7 @@ func (this *Transaction) query(sqlFmt string, sqlValue ...interface{}) *ClientQu
 
 }
 
-//提交事务
+// 提交事务
 func (this *Transaction) Commit() error {
 
 	err := this.tx.Commit()
@@ -616,13 +624,13 @@ func (this *Transaction) Commit() error {
 	return err
 }
 
-//回滚事务
+// 回滚事务
 func (this *Transaction) Roolback() error {
 
 	return this.Rollback()
 }
 
-//回滚事务
+// 回滚事务
 func (this *Transaction) Rollback() error {
 
 	err := this.tx.Rollback()
@@ -639,11 +647,26 @@ func (this *Transaction) Rollback() error {
 func (this *Client) connect() error {
 
 	if this.db == nil {
-		var err error = nil
+		var err error
+
+		if this.SSL {
+			rootCertPool := x509.NewCertPool()
+			if ok := rootCertPool.AppendCertsFromPEM(this.RootCertData); !ok {
+				return errors.New("Failed to append PEM.")
+			}
+			sslerr := mysql.RegisterTLSConfig("custom", &tls.Config{RootCAs: rootCertPool})
+
+			if sslerr != nil {
+				return sslerr
+			}
+		}
+
+		////mysql.RegisterTLSConfig("custom", &tls.Config{ RootCAs: rootCertPool,})
+		//db, err := sql.Open("mysql", "user@tcp(localhost:3306)/test?tls=custom")
 
 		this.db, err = sql.Open("mysql", this.parseDNS())
 		if err != nil {
-			if Debug && err != nil {
+			if Debug {
 				log.Println("[Litedb Debug] connection error:", err)
 			}
 			if this.db != nil {
@@ -652,8 +675,6 @@ func (this *Client) connect() error {
 
 			this.db = nil
 			return err
-		} else {
-
 		}
 	}
 
@@ -670,13 +691,17 @@ func (this *Client) parseDNS() string {
 	if this.Config != nil {
 		config = this.Config.Parse()
 	}
-	
+
 	dns := ""
 
 	if this.Protocol == "unix" {
 		dns = fmt.Sprintf("%s:%s@%s(%s)/%s?%s", this.User, this.Password, this.Protocol, this.Host, this.Database, config)
 	} else {
 		dns = fmt.Sprintf("%s:%s@%s(%s:%d)/%s?%s", this.User, this.Password, this.Protocol, this.Host, this.Port, this.Database, config)
+
+		if this.SSL {
+			dns = fmt.Sprintf("%s&tls=custom", dns)
+		}
 	}
 
 	if Debug {
